@@ -1,303 +1,462 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My Web App</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #1e1e1e;
-      color: white;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-
-    .panel {
-      background: #2b2b2b;
-      padding: 20px;
-      border-radius: 10px;
-      width: 300px;
-      margin: 100px auto;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-      transition: all 0.4s ease;
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .panel.hidden {
-      opacity: 0;
-      transform: translateY(10px);
-      pointer-events: none;
-      transition: all 0.4s ease;
-    }
-
-    input {
-      padding: 8px;
-      margin: 8px 0;
-      border: none;
-      border-radius: 5px;
-      width: 80%;
-      background-color: #444;
-      color: white;
-      transition: background-color 0.3s ease;
-    }
-    input:focus {
-      background-color: #555;
-      outline: none;
-    }
-
-    button {
-      padding: 10px 20px;
-      margin: 5px;
-      border: none;
-      border-radius: 8px;
-      background-color: #4caf50;
-      color: white;
-      cursor: pointer;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-
-    button:hover {
-      background-color: #45a049;
-      transform: scale(1.05);
-    }
-
-    #moneyDisplay {
-      position: fixed;
-      top: 15px;
-      left: 15px;
-      font-size: 18px;
-      background-color: #222;
-      color: #0f0;
-      padding: 8px 14px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #0f0;
-      display: none;
-      transition: opacity 0.4s ease;
-    }
-
-    #profilePanel, #ownerPanel, #mainUI {
-      display: none;
-    }
-
-    .toggle-btn {
-      position: fixed;
-      bottom: 15px;
-      right: 15px;
-      padding: 8px 12px;
-      background-color: #555;
-      border: none;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
-      display: none;
-      transition: background-color 0.3s ease, transform 0.2s ease;
-    }
-    .toggle-btn:hover {
-      background-color: #444;
-      transform: scale(1.1);
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>iOS16 Style Login & Owner Panel</title>
+<style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+  }
+  body {
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    background: #f0f0f5;
+    color: #1c1c1e;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
+  }
+  .panel {
+    background: #fff;
+    width: 320px;
+    max-width: 95vw;
+    padding: 28px 24px;
+    border-radius: 28px;
+    box-shadow:
+      0 2px 5px rgba(0,0,0,0.05),
+      0 15px 30px rgba(0,0,0,0.1);
+    text-align: center;
+    user-select: none;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .panel.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  input {
+    width: 100%;
+    padding: 16px 18px;
+    margin: 14px 0;
+    border: none;
+    border-radius: 20px;
+    background: #f2f2f7;
+    font-size: 17px;
+    color: #1c1c1e;
+    box-shadow:
+      inset 0 1px 3px rgba(0,0,0,0.06);
+    transition:
+      background-color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+  input:focus {
+    outline: none;
+    background: #e5e5ea;
+    box-shadow:
+      inset 0 3px 6px rgba(0,0,0,0.12);
+  }
+  button {
+    width: 100%;
+    padding: 18px;
+    margin-top: 18px;
+    background: #007aff;
+    border: none;
+    border-radius: 24px;
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow:
+      0 8px 15px rgba(0,122,255,0.3);
+    transition:
+      background-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.15s ease;
+    user-select: none;
+  }
+  button:hover {
+    background: #005ecb;
+    box-shadow:
+      0 10px 20px rgba(0,94,203,0.5);
+    transform: scale(1.05);
+  }
+  button:active {
+    transform: scale(0.95);
+  }
+  .msg {
+    margin-top: 12px;
+    font-style: italic;
+    color: #ff3b30;
+    min-height: 20px;
+  }
+  #moneyDisplay {
+    position: fixed;
+    top: 24px;
+    left: 24px;
+    background: #fff;
+    padding: 12px 22px;
+    border-radius: 26px;
+    font-weight: 700;
+    font-size: 18px;
+    color: #007aff;
+    box-shadow:
+      0 8px 25px rgba(0,122,255,0.3);
+    user-select: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  #moneyDisplay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #profileToggleBtn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #fff;
+    border-radius: 50%;
+    width: 62px;
+    height: 62px;
+    border: none;
+    font-size: 30px;
+    color: #007aff;
+    box-shadow:
+      0 10px 28px rgba(0,122,255,0.35);
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.3s ease;
+    user-select: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #profileToggleBtn.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #profileToggleBtn:hover {
+    transform: scale(1.1);
+    box-shadow:
+      0 14px 36px rgba(0,122,255,0.45);
+  }
+  #profileToggleBtn:active {
+    transform: scale(0.9);
+  }
+  #profilePanel {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: 320px;
+    background: #fff;
+    border-radius: 32px;
+    box-shadow:
+      0 15px 40px rgba(0,0,0,0.15);
+    padding: 24px;
+    text-align: left;
+    font-weight: 600;
+    color: #1c1c1e;
+    user-select: text;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  #profilePanel.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  #profilePanel button {
+    width: 100%;
+    margin-top: 20px;
+    background: #ff3b30;
+    font-weight: 700;
+    border-radius: 24px;
+    padding: 16px 0;
+    box-shadow:
+      0 8px 20px rgba(255,59,48,0.35);
+    color: white;
+  }
+  #ownerPanel {
+    position: fixed;
+    bottom: 140px;
+    right: 24px;
+    width: 320px;
+    background: #fff;
+    border-radius: 32px;
+    box-shadow:
+      0 15px 40px rgba(0,0,0,0.15);
+    padding: 24px;
+    text-align: left;
+    font-weight: 600;
+    color: #1c1c1e;
+    user-select: text;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  #ownerPanel.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  #ownerPanel input {
+    margin-bottom: 12px;
+  }
+  #ownerPanel button {
+    width: 100%;
+    background: #007aff;
+    font-weight: 700;
+    border-radius: 24px;
+    padding: 16px 0;
+    box-shadow:
+      0 8px 25px rgba(0,122,255,0.3);
+    color: white;
+    margin-top: 10px;
+  }
+  #accountList {
+    max-height: 160px;
+    overflow-y: auto;
+    margin-top: 15px;
+    padding-right: 8px;
+    font-weight: 500;
+    color: #444;
+    border: 1px solid #eee;
+    border-radius: 16px;
+    background: #f9f9fb;
+  }
+</style>
 </head>
 <body>
 
-<div id="loginPanel" class="panel">
+<!-- Login Panel -->
+<div id="loginPanel" class="panel show">
   <h2>Login</h2>
-  <input id="loginUser" placeholder="Username"><br>
-  <input id="loginPass" placeholder="Password" type="password"><br>
+  <input id="loginUser" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="none" />
+  <input id="loginPass" placeholder="Password" type="password" autocomplete="off" />
   <button onclick="login()">Login</button>
   <button onclick="showCreate()">Create Account</button>
-  <p id="loginMsg"></p>
+  <p id="loginMsg" class="msg"></p>
 </div>
 
-<div id="createPanel" class="panel hidden" style="display:none;">
+<!-- Create Account Panel -->
+<div id="createPanel" class="panel">
   <h2>Create Account</h2>
-  <input id="createUser" placeholder="Username"><br>
-  <input id="createPass" placeholder="Password" type="password"><br>
+  <input id="createUser" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="none" />
+  <input id="createPass" placeholder="Password" type="password" autocomplete="off" />
   <button onclick="createAccount()">Create</button>
   <button onclick="showLogin()">Back to Login</button>
-  <p id="createMsg"></p>
+  <p id="createMsg" class="msg"></p>
 </div>
 
-<div id="mainUI">
-  <div id="moneyDisplay">💰 Money: $0</div>
-  <button class="toggle-btn" onclick="toggleProfile()">👤</button>
-</div>
+<!-- Money Display -->
+<div id="moneyDisplay">💰 Money: $0</div>
 
-<div id="profilePanel" class="panel hidden">
-  <h3>👤 Profile</h3>
+<!-- Profile Toggle Button -->
+<button id="profileToggleBtn" title="Toggle Profile">👤</button>
+
+<!-- Profile Panel -->
+<div id="profilePanel">
+  <h3>Profile</h3>
+  <p><strong>Username:</strong> <span id="profileUsername"></span></p>
   <button onclick="logout()">Logout</button>
   <button id="ownerToggleBtn" onclick="toggleOwnerPanel()" style="display:none;">Toggle Owner Panel</button>
 </div>
 
-<div id="ownerPanel" class="panel hidden">
-  <h3>👑 Owner Panel</h3>
-  <input id="giveUser" placeholder="User to give money">
-  <input id="giveAmount" placeholder="Amount" type="number">
-  <button onclick="giveMoney()">Give</button>
-  <h4>📃 Accounts List:</h4>
+<!-- Owner Panel -->
+<div id="ownerPanel">
+  <h3>Owner Panel</h3>
+  <input id="giveUser" placeholder="User to give money" autocomplete="off" autocorrect="off" autocapitalize="none" />
+  <input id="giveAmount" placeholder="Amount" type="number" min="1" />
+  <button onclick="giveMoney()">Give Money</button>
+  <h4>Accounts List:</h4>
   <div id="accountList"></div>
 </div>
 
 <script>
+  let accounts = JSON.parse(localStorage.getItem('accounts')) || {
+    manyu: { password: "Manuufo25252265", money: 1000 }
+  };
   let currentUser = null;
 
-  function saveAccounts(accounts) {
-    localStorage.setItem("accounts", JSON.stringify(accounts));
+  // Show/hide functions for panels
+  function showPanel(id) {
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("show"));
+    document.getElementById(id).classList.add("show");
   }
 
-  function getAccounts() {
-    return JSON.parse(localStorage.getItem("accounts") || "{}");
+  function showLogin() {
+    clearMessages();
+    showPanel("loginPanel");
+  }
+  function showCreate() {
+    clearMessages();
+    showPanel("createPanel");
+  }
+  function showMain() {
+    clearMessages();
+    document.getElementById("loginPanel").classList.remove("show");
+    document.getElementById("createPanel").classList.remove("show");
+    document.getElementById("profileToggleBtn").classList.add("show");
+    updateMoneyDisplay();
+    updateProfilePanel();
   }
 
-  function showElement(el) {
-    el.style.display = "block";
-    setTimeout(() => el.classList.remove("hidden"), 20);
-  }
-
-  function hideElement(el) {
-    el.classList.add("hidden");
-    setTimeout(() => { el.style.display = "none"; }, 400);
+  function clearMessages() {
+    document.getElementById("loginMsg").textContent = "";
+    document.getElementById("createMsg").textContent = "";
   }
 
   function login() {
-    const user = loginUser.value.trim();
-    const pass = loginPass.value;
-    const accounts = getAccounts();
-    if (accounts[user] && accounts[user].password === pass) {
-      currentUser = user;
-      showMain();
-    } else {
-      loginMsg.textContent = "❌ Invalid credentials";
+    const user = document.getElementById("loginUser").value.trim();
+    const pass = document.getElementById("loginPass").value;
+    if (!user || !pass) {
+      document.getElementById("loginMsg").textContent = "⚠️ Please enter username and password.";
+      return;
     }
+    if (!accounts[user]) {
+      document.getElementById("loginMsg").textContent = "❌ Invalid credentials.";
+      return;
+    }
+    if (accounts[user].password !== pass) {
+      document.getElementById("loginMsg").textContent = "❌ Invalid credentials.";
+      return;
+    }
+    currentUser = user;
+    document.getElementById("loginUser").value = "";
+    document.getElementById("loginPass").value = "";
+    showMain();
   }
 
   function createAccount() {
-    const user = createUser.value.trim();
-    const pass = createPass.value;
-    if (!user || !pass) return createMsg.textContent = "❌ Please fill in all fields";
-
-    const accounts = getAccounts();
-    if (accounts[user]) return createMsg.textContent = "❌ Username already exists";
-
+    const user = document.getElementById("createUser").value.trim();
+    const pass = document.getElementById("createPass").value;
+    if (!user || !pass) {
+      document.getElementById("createMsg").textContent = "⚠️ Please fill all fields.";
+      return;
+    }
+    if (accounts[user]) {
+      document.getElementById("createMsg").textContent = "⚠️ Username already exists.";
+      return;
+    }
     accounts[user] = { password: pass, money: 0 };
-    saveAccounts(accounts);
-    currentUser = user;
-    showMain();
+    saveAccounts();
+    document.getElementById("createMsg").textContent = `🎉 Account "${user}" created! You can login now.`;
+    document.getElementById("createUser").value = "";
+    document.getElementById("createPass").value = "";
   }
 
   function logout() {
     currentUser = null;
+    document.getElementById("profileToggleBtn").classList.remove("show");
+    hideProfilePanel();
+    hideOwnerPanel();
     showLogin();
   }
 
-  function showMain() {
-    hideElement(document.getElementById("loginPanel"));
-    hideElement(document.getElementById("createPanel"));
-    showElement(document.getElementById("mainUI"));
-    hideElement(document.getElementById("profilePanel"));
-    hideElement(document.getElementById("ownerPanel"));
+  function saveAccounts() {
+    localStorage.setItem("accounts", JSON.stringify(accounts));
+  }
 
-    updateMoney();
-    updateAccountList();
-
-    // Show profile toggle button only when logged in
-    const toggleBtn = document.querySelector(".toggle-btn");
-    toggleBtn.style.display = "block";
-
-    // Show owner toggle button only for owner
-    const ownerToggleBtn = document.getElementById("ownerToggleBtn");
-    if (currentUser === "manyu") {
-      ownerToggleBtn.style.display = "inline-block";
+  function updateMoneyDisplay() {
+    if (currentUser) {
+      document.getElementById("moneyDisplay").textContent = `💰 Money: $${accounts[currentUser].money}`;
+      document.getElementById("moneyDisplay").classList.add("show");
     } else {
-      ownerToggleBtn.style.display = "none";
+      document.getElementById("moneyDisplay").classList.remove("show");
     }
   }
 
-  function showLogin() {
-    showElement(document.getElementById("loginPanel"));
-    hideElement(document.getElementById("createPanel"));
-    hideElement(document.getElementById("mainUI"));
-    hideElement(document.getElementById("profilePanel"));
-    hideElement(document.getElementById("ownerPanel"));
+  // Profile panel toggle
+  const profileToggleBtn = document.getElementById("profileToggleBtn");
+  const profilePanel = document.getElementById("profilePanel");
+  let profileVisible = false;
 
-    // Hide profile toggle button when not logged in
-    document.querySelector(".toggle-btn").style.display = "none";
-
-    // Clear messages
-    loginMsg.textContent = "";
-    createMsg.textContent = "";
-  }
-
-  function showCreate() {
-    hideElement(document.getElementById("loginPanel"));
-    showElement(document.getElementById("createPanel"));
-  }
-
-  function toggleProfile() {
-    const profile = document.getElementById("profilePanel");
-    if (profile.style.display === "block") {
-      hideElement(profile);
+  profileToggleBtn.addEventListener("click", () => {
+    profileVisible = !profileVisible;
+    if (profileVisible) {
+      updateProfilePanel();
+      profilePanel.classList.add("show");
     } else {
-      showElement(profile);
+      profilePanel.classList.remove("show");
     }
+  });
+
+  function hideProfilePanel() {
+    profileVisible = false;
+    profilePanel.classList.remove("show");
   }
+
+  function updateProfilePanel() {
+    document.getElementById("profileUsername").textContent = currentUser || "";
+    // Show owner toggle button only if currentUser is 'manyu' (owner)
+    document.getElementById("ownerToggleBtn").style.display = (currentUser === "manyu") ? "block" : "none";
+  }
+
+  // Owner panel toggle
+  const ownerToggleBtn = document.getElementById("ownerToggleBtn");
+  const ownerPanel = document.getElementById("ownerPanel");
+  let ownerVisible = false;
 
   function toggleOwnerPanel() {
-    if (currentUser !== "manyu") {
-      alert("❌ You are not the owner!");
-      return;
-    }
-    const ownerPanel = document.getElementById("ownerPanel");
-    if (ownerPanel.style.display === "block") {
-      hideElement(ownerPanel);
+    ownerVisible = !ownerVisible;
+    if (ownerVisible) {
+      updateOwnerPanel();
+      ownerPanel.classList.add("show");
     } else {
-      showElement(ownerPanel);
+      ownerPanel.classList.remove("show");
     }
-    updateAccountList();
   }
 
+  function hideOwnerPanel() {
+    ownerVisible = false;
+    ownerPanel.classList.remove("show");
+  }
+
+  function updateOwnerPanel() {
+    // Update accounts list
+    const listDiv = document.getElementById("accountList");
+    listDiv.innerHTML = "";
+    for (const user in accounts) {
+      listDiv.innerHTML += `<div>${user}: $${accounts[user].money}</div>`;
+    }
+  }
+
+  // Owner gives money to others
   function giveMoney() {
-    const user = giveUser.value.trim();
-    const amount = parseInt(giveAmount.value);
-    const accounts = getAccounts();
-    if (!accounts[user]) {
-      alert("❌ User not found");
+    const targetUser = document.getElementById("giveUser").value.trim();
+    const amount = parseInt(document.getElementById("giveAmount").value, 10);
+
+    if (!targetUser || isNaN(amount) || amount <= 0) {
+      alert("Please enter valid username and amount.");
       return;
     }
-    if (isNaN(amount) || amount <= 0) {
-      alert("❌ Invalid amount");
+    if (!accounts[targetUser]) {
+      alert("User does not exist.");
       return;
     }
-    accounts[user].money += amount;
-    saveAccounts(accounts);
-    updateAccountList();
-    if (user === currentUser) updateMoney();
+    accounts[targetUser].money += amount;
+    saveAccounts();
+    updateMoneyDisplay();
+    updateOwnerPanel();
+    alert(`Gave $${amount} to ${targetUser}`);
+    document.getElementById("giveUser").value = "";
+    document.getElementById("giveAmount").value = "";
   }
 
-  function updateMoney() {
-    const accounts = getAccounts();
-    const money = accounts[currentUser]?.money ?? 0;
-    const moneyDisplay = document.getElementById("moneyDisplay");
-    moneyDisplay.textContent = `💰 Money: $${money}`;
-    moneyDisplay.style.display = "block";
-  }
-
-  function updateAccountList() {
-    const accounts = getAccounts();
-    const list = Object.entries(accounts)
-      .map(([user, data]) => `• ${user}: $${data.money ?? 0}`)
-      .join("<br>");
-    document.getElementById("accountList").innerHTML = list;
-  }
-
+  // Initialize page
   window.onload = () => {
-    if(currentUser && getAccounts()[currentUser]){
-      showMain();
-    } else {
-      showLogin();
-    }
-  }
+    showLogin();
+  };
 </script>
 
 </body>
