@@ -72,7 +72,7 @@
   <script>
     let accounts = JSON.parse(localStorage.getItem("accounts")) || {};
 
-    // auto-create owner
+    // สร้าง owner ถ้ายังไม่มี
     if (!accounts["manyu"]) {
       accounts["manyu"] = {
         password: "Manuufo25252265",
@@ -82,7 +82,7 @@
       localStorage.setItem("accounts", JSON.stringify(accounts));
     }
 
-    let currentUser = localStorage.getItem("currentUser") || null;
+    let currentUser = localStorage.getItem("currentUser");
 
     function login() {
       const u = document.getElementById("username").value;
@@ -101,14 +101,8 @@
       const u = document.getElementById("username").value;
       const p = document.getElementById("password").value;
 
-      if (!u || !p) {
-        alert("Enter name and password");
-        return;
-      }
-      if (accounts[u]) {
-        alert("Account already exists");
-        return;
-      }
+      if (!u || !p) return alert("Enter name and password");
+      if (accounts[u]) return alert("Account already exists");
 
       accounts[u] = { password: p, money: 0, role: "user" };
       localStorage.setItem("accounts", JSON.stringify(accounts));
@@ -124,8 +118,15 @@
     function showMain() {
       document.getElementById("loginUI").style.display = "none";
       document.getElementById("mainUI").style.display = "block";
-      document.getElementById("currentUserText").textContent = "Logged in as: " + currentUser;
 
+      // ตรวจสอบว่าผู้ใช้ยังอยู่ใน accounts
+      if (!accounts[currentUser]) {
+        alert("❌ User not found. Please login again.");
+        logout();
+        return;
+      }
+
+      document.getElementById("currentUserText").textContent = "Logged in as: " + currentUser;
       updateMoney();
       updateAccountList();
 
@@ -138,7 +139,8 @@
     }
 
     function updateMoney() {
-      document.getElementById("moneyDisplay").textContent = `💰 Money: $${accounts[currentUser].money ?? 0}`;
+      let money = accounts[currentUser]?.money ?? 0;
+      document.getElementById("moneyDisplay").textContent = `💰 Money: $${money}`;
     }
 
     function updateAccountList() {
@@ -168,7 +170,10 @@
       panel.style.display = panel.style.display === "none" ? "block" : "none";
     }
 
-    if (currentUser && accounts[currentUser]) showMain();
+    // โหลดเมื่อเปิดเว็บ (ถ้าเคย login)
+    if (currentUser && accounts[currentUser]) {
+      showMain();
+    }
   </script>
 </body>
 </html>
