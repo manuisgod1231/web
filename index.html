@@ -3,9 +3,7 @@
 <head>
   <title>manuisgod UI</title>
   <style>
-    /* ... โค้ดเดิมเหมือนเดิม ... */
-
-    /* ปรับขนาดและตำแหน่ง moneyDisplay */
+    /* ... โค้ด CSS เดิมของคุณ ... */
     #moneyDisplay {
       position: fixed;
       top: 20px;
@@ -21,13 +19,44 @@
       display: none;
       cursor: default;
     }
-
-    /* เพิ่ม style toggleOwnerPanelBtn ใน profileBox */
     #toggleOwnerPanelBtn {
       margin-top: 10px;
       width: 100%;
       display: none; /* แสดงเฉพาะ owner */
       background: linear-gradient(135deg, #28a745, #1c7c31);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #ownerPanel {
+      display: none;
+      margin-top: 10px;
+      background: #222;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+      color: white;
+      font-size: 14px;
+    }
+    #ownerPanel input {
+      width: 100%;
+      margin: 5px 0;
+      padding: 6px;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+    }
+    #ownerPanel button {
+      width: 100%;
+      padding: 8px;
+      background: #28a745;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -47,22 +76,6 @@
   <div class="ui-box" id="mainUI" style="display:none;">
     <h2>Welcome!</h2>
     <p id="welcomeMessage"></p>
-
-    <!-- Owner Panel -->
-    <div id="ownerPanel" style="display:none; margin-top: 20px; background:#222; padding:15px; border-radius:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.8);">
-      <h3>Owner Control Panel</h3>
-
-      <label for="giveMoneyUser">Username to Give Money:</label>
-      <input type="text" id="giveMoneyUser" placeholder="Username">
-
-      <label for="giveMoneyAmount">Amount:</label>
-      <input type="number" id="giveMoneyAmount" placeholder="Amount" min="1">
-
-      <button id="giveMoneyBtn">Give Money</button>
-
-      <h4>Accounts List:</h4>
-      <pre id="accountsList">(loading...)</pre>
-    </div>
   </div>
 
   <!-- Money Display -->
@@ -72,14 +85,25 @@
   <button id="profileBtn" style="display:none;">Profile</button>
 
   <!-- Profile Box -->
-  <div id="profileBox" style="text-align:center;">
+  <div id="profileBox" style="display:none; text-align:left; width: 250px; background:#2e2e2e; padding:15px; border-radius:15px; position: fixed; top: 60px; right: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); color:white; z-index:1000;">
     <h3>Your Profile</h3>
     <p><strong>Username:</strong> <span id="profileUsername"></span></p>
     <button id="profileLogoutBtn">Logout</button>
-    <button id="closeProfileBtn">Close</button>
 
-    <!-- ปุ่ม Toggle Owner Panel ใต้ Profile UI -->
-    <button id="toggleOwnerPanelBtn" style="display:none;">Toggle Owner Panel</button>
+    <!-- Toggle Owner Panel ปุ่ม -->
+    <button id="toggleOwnerPanelBtn">Toggle Owner Panel</button>
+
+    <!-- Owner Panel -->
+    <div id="ownerPanel">
+      <label for="giveMoneyUser">Give Money To (username):</label>
+      <input type="text" id="giveMoneyUser" placeholder="Username">
+      <label for="giveMoneyAmount">Amount:</label>
+      <input type="number" id="giveMoneyAmount" placeholder="Amount" min="1">
+      <button id="giveMoneyBtn">Give Money</button>
+
+      <h4>Accounts List:</h4>
+      <pre id="accountsList" style="max-height: 150px; overflow-y: auto;"></pre>
+    </div>
   </div>
 
 <script>
@@ -102,7 +126,7 @@
       document.getElementById("moneyDisplay").style.display = "block";
     } else {
       document.getElementById("moneyDisplay").textContent = `💰 Money: $0`;
-      document.getElementById("moneyDisplay").style.display = "block";
+      document.getElementById("moneyDisplay").style.display = "none";
     }
   }
 
@@ -125,16 +149,6 @@
     document.getElementById("welcomeMessage").textContent = `Hello, ${currentUser}! Welcome to the main UI.`;
     updateMoneyDisplay();
     clearInputs();
-
-    // แสดง/ซ่อน Owner Panel และปุ่ม toggleOwnerPanelBtn ใต้ Profile
-    if (currentUser === ownerName) {
-      document.getElementById("ownerPanel").style.display = "block";
-      document.getElementById("toggleOwnerPanelBtn").style.display = "inline-block";
-      updateAccountsList();
-    } else {
-      document.getElementById("ownerPanel").style.display = "none";
-      document.getElementById("toggleOwnerPanelBtn").style.display = "none";
-    }
   }
 
   function logout() {
@@ -145,7 +159,6 @@
     document.getElementById("outputText").textContent = "";
     hideProfileButton();
     closeProfile();
-    clearInputs();
     document.getElementById("moneyDisplay").style.display = "none";
   }
 
@@ -164,6 +177,14 @@
     } else {
       document.getElementById("profileUsername").textContent = currentUser;
       box.style.display = "block";
+
+      // แสดงปุ่ม toggleOwnerPanelBtn เฉพาะ owner
+      if (currentUser === ownerName) {
+        document.getElementById("toggleOwnerPanelBtn").style.display = "block";
+      } else {
+        document.getElementById("toggleOwnerPanelBtn").style.display = "none";
+        document.getElementById("ownerPanel").style.display = "none"; // ซ่อน panel owner ถ้าไม่ใช่ owner
+      }
     }
   }
 
@@ -225,7 +246,6 @@
     document.getElementById("outputText").textContent = `🎉 Account created and logged in as ${username}`;
   }
 
-  // owner ให้เงินผู้เล่นคนอื่น
   function giveMoney() {
     let targetUser = document.getElementById("giveMoneyUser").value.trim();
     let amount = parseInt(document.getElementById("giveMoneyAmount").value);
@@ -243,10 +263,17 @@
       return;
     }
 
+    // owner เท่านั้นที่ให้เงินได้
+    if (currentUser !== ownerName) {
+      alert("Only owner can give money.");
+      return;
+    }
+
     accounts[targetUser].money = (accounts[targetUser].money || 0) + amount;
     saveAccounts();
     updateAccountsList();
 
+    // ถ้าเจ้าของเงินเป็นคนรับเงินด้วย ให้ update display ด้วย
     if (currentUser === targetUser) {
       updateMoneyDisplay();
     }
@@ -256,35 +283,47 @@
     document.getElementById("giveMoneyAmount").value = "";
   }
 
+  function updateAccountsList() {
+    let listEl = document.getElementById("accountsList");
+    if (!accounts || Object.keys(accounts).length === 0) {
+      listEl.textContent = "(no accounts)";
+      return;
+    }
+    let text = "";
+    for (let user in accounts) {
+      text += `• ${user}: $${accounts[user].money}\n`;
+    }
+    listEl.textContent = text;
+  }
+
   // Event listeners
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginBtn').addEventListener('click', login);
     document.getElementById('createAccBtn').addEventListener('click', createAccount);
     document.getElementById('profileBtn').addEventListener('click', toggleProfile);
     document.getElementById('profileLogoutBtn').addEventListener('click', logout);
-    document.getElementById('closeProfileBtn').addEventListener('click', closeProfile);
-    document.getElementById('giveMoneyBtn').addEventListener('click', giveMoney);
-
-    // toggle owner panel button under profile UI
-    document.getElementById("toggleOwnerPanelBtn").addEventListener("click", () => {
-      let panel = document.getElementById("ownerPanel");
-      if (panel.style.display === "block") {
-        panel.style.display = "none";
+    document.getElementById('toggleOwnerPanelBtn').addEventListener('click', () => {
+      const ownerPanel = document.getElementById('ownerPanel');
+      if (ownerPanel.style.display === 'block') {
+        ownerPanel.style.display = 'none';
       } else {
-        panel.style.display = "block";
+        ownerPanel.style.display = 'block';
+        updateAccountsList();
       }
     });
+    document.getElementById('giveMoneyBtn').addEventListener('click', giveMoney);
   });
 
   window.onload = function() {
     accounts = JSON.parse(localStorage.getItem('accounts')) || {};
 
-    // สร้าง owner อัตโนมัติถ้ายังไม่มี (รหัสผ่านเป็น 'Manuufo25252265')
+    // สร้าง owner ถ้ายังไม่มี
     if (!accounts[ownerName]) {
       accounts[ownerName] = { password: "Manuufo25252265", money: 1000 };
       saveAccounts();
     }
 
+    // โหลด user ที่ล็อกอินล่าสุดถ้ามี
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser && accounts[savedUser]) {
       currentUser = savedUser;
