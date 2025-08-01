@@ -174,10 +174,12 @@
   }
 
   function updateMoneyDisplay() {
-    if (currentUser) {
-      const moneyDisplay = document.getElementById("moneyDisplay");
-      moneyDisplay.textContent = `💰 Money: $${accounts[currentUser].money}`;
-      moneyDisplay.style.display = "block";
+    if (currentUser && accounts[currentUser] && accounts[currentUser].money !== undefined) {
+      document.getElementById("moneyDisplay").textContent = `💰 Money: $${accounts[currentUser].money}`;
+      document.getElementById("moneyDisplay").style.display = "block";
+    } else {
+      document.getElementById("moneyDisplay").textContent = `💰 Money: $0`;
+      document.getElementById("moneyDisplay").style.display = "block";
     }
   }
 
