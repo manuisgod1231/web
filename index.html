@@ -1,168 +1,198 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ManuisGodWeb</title>
+  <title>ManuisGod Web</title>
   <style>
     body {
-      background: #111;
-      color: white;
       font-family: Arial;
+      background: #111;
+      color: #fff;
+      margin: 0;
+      padding: 0;
       text-align: center;
-      margin-top: 100px;
     }
-    input, button {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 5px;
-    }
-    #mainUI, #profileUI, #ownerPanel {
-      display: none;
-    }
+    .hidden { display: none; }
     #moneyDisplay {
       position: absolute;
       top: 10px;
       left: 10px;
       background: #222;
-      padding: 6px 10px;
+      padding: 5px 10px;
       border-radius: 10px;
     }
-    #profileUI {
+    #profileBtn {
       position: absolute;
       top: 10px;
       right: 10px;
-      background: #222;
-      padding: 10px;
-      border-radius: 10px;
+    }
+    #ownerPanel, #profileUI, #loginUI, #createUI {
+      margin-top: 20px;
+    }
+    input {
+      padding: 5px;
+      margin: 5px;
+    }
+    button {
+      padding: 6px 12px;
+      margin: 5px;
     }
   </style>
 </head>
 <body>
 
-  <div id="loginUI">
-    <h2>Login / Register</h2>
-    <input id="username" placeholder="Username"><br>
-    <input id="password" placeholder="Password" type="password"><br>
-    <button onclick="login()">Login</button>
-    <button onclick="register()">Create Account</button>
-    <p id="msg" style="color: red;"></p>
-  </div>
+<h1>Welcome to ManuisGod Web</h1>
 
-  <div id="mainUI">
-    <div id="moneyDisplay">💰 Money: $0</div>
+<div id="homeUI">
+  <button onclick="showLogin()">Login</button>
+  <button onclick="showCreate()">Create Account</button>
+</div>
 
-    <div id="profileUI">
-      <h3>Profile</h3>
-      <p id="currentUserText"></p>
-      <button onclick="logout()">Logout</button><br>
-      <button onclick="toggleOwnerPanel()">Toggle Owner Panel</button>
-    </div>
+<div id="loginUI" class="hidden">
+  <h2>Login</h2>
+  <input id="loginUsername" placeholder="Username"><br>
+  <input id="loginPassword" placeholder="Password" type="password"><br>
+  <button onclick="login()">Login</button>
+  <button onclick="backToHome()">Back</button>
+</div>
 
-    <div id="ownerPanel" style="display:none;">
-      <h3>Owner Panel</h3>
-      <textarea id="accountsList" rows="5" cols="30" readonly></textarea><br>
-      <input id="giveUser" placeholder="User to Give"><br>
-      <input id="giveAmount" type="number" placeholder="Amount"><br>
-      <button onclick="giveMoney()">Give</button>
-    </div>
-  </div>
+<div id="createUI" class="hidden">
+  <h2>Create Account</h2>
+  <input id="createUsername" placeholder="Username"><br>
+  <input id="createPassword" placeholder="Password" type="password"><br>
+  <button onclick="createAccount()">Create</button>
+  <button onclick="backToHome()">Back</button>
+</div>
 
-  <script>
-    let accounts = JSON.parse(localStorage.getItem("accounts")) || {};
+<div id="moneyDisplay" class="hidden">💰 Money: $0</div>
+<button id="profileBtn" class="hidden" onclick="toggleProfile()">Profile</button>
 
-    // Ensure default owner exists
-    if (!accounts["manyu"]) {
-      accounts["manyu"] = {
-        password: "Manuufo25252265",
-        money: 1000,
-        role: "owner"
-      };
-      localStorage.setItem("accounts", JSON.stringify(accounts));
+<div id="profileUI" class="hidden">
+  <h2>Profile</h2>
+  <p id="profileName"></p>
+  <button onclick="toggleOwnerPanel()">Toggle Owner Panel</button>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<div id="ownerPanel" class="hidden">
+  <h2>👑 Owner Panel</h2>
+  <input id="giveUser" placeholder="Username to give $"><br>
+  <input id="giveAmount" type="number" placeholder="Amount"><br>
+  <button onclick="giveMoney()">Give</button>
+  <h3>Accounts List:</h3>
+  <div id="accountList"></div>
+</div>
+
+<script>
+  let users = JSON.parse(localStorage.getItem('users') || '{}');
+  let currentUser = localStorage.getItem('currentUser');
+
+  function saveUsers() {
+    localStorage.setItem('users', JSON.stringify(users));
+  }
+
+  function updateMoneyDisplay() {
+    if (currentUser && users[currentUser]) {
+      document.getElementById('moneyDisplay').textContent = '💰 Money: $' + users[currentUser].money;
     }
+  }
 
-    let currentUser = localStorage.getItem("currentUser");
+  function login() {
+    const u = loginUsername.value;
+    const p = loginPassword.value;
+    if (users[u] && users[u].password === p) {
+      currentUser = u;
+      localStorage.setItem('currentUser', currentUser);
+      showMainUI();
+    } else {
+      alert('❌ Invalid credentials');
+    }
+  }
 
-    function login() {
-      let user = document.getElementById("username").value;
-      let pass = document.getElementById("password").value;
-      if (accounts[user] && accounts[user].password === pass) {
-        localStorage.setItem("currentUser", user);
-        currentUser = user;
-        showUI();
-      } else {
-        document.getElementById("msg").textContent = "❌ Invalid credentials";
+  function logout() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    location.reload();
+  }
+
+  function createAccount() {
+    const u = createUsername.value;
+    const p = createPassword.value;
+    if (users[u]) {
+      alert('❌ Username already exists');
+    } else {
+      users[u] = { password: p, money: 0 };
+      saveUsers();
+      currentUser = u;
+      localStorage.setItem('currentUser', u);
+      showMainUI();
+    }
+  }
+
+  function showMainUI() {
+    document.getElementById('homeUI').classList.add('hidden');
+    document.getElementById('loginUI').classList.add('hidden');
+    document.getElementById('createUI').classList.add('hidden');
+    document.getElementById('moneyDisplay').classList.remove('hidden');
+    document.getElementById('profileBtn').classList.remove('hidden');
+    updateMoneyDisplay();
+  }
+
+  function toggleProfile() {
+    const p = document.getElementById('profileUI');
+    const n = document.getElementById('profileName');
+    n.textContent = `Username: ${currentUser}`;
+    p.classList.toggle('hidden');
+  }
+
+  function toggleOwnerPanel() {
+    const owner = currentUser === 'manyu';
+    if (!owner) return alert('❌ You are not the owner');
+    const panel = document.getElementById('ownerPanel');
+    const list = document.getElementById('accountList');
+    panel.classList.toggle('hidden');
+    if (!panel.classList.contains('hidden')) {
+      list.innerHTML = '';
+      for (let name in users) {
+        const money = users[name].money ?? 0;
+        list.innerHTML += `• ${name}: $${money}<br>`;
       }
     }
+  }
 
-    function register() {
-      let user = document.getElementById("username").value;
-      let pass = document.getElementById("password").value;
-      if (!user || !pass) return alert("Please enter username and password");
-      if (accounts[user]) return alert("Account already exists!");
+  function giveMoney() {
+    const to = document.getElementById('giveUser').value;
+    const amount = parseInt(document.getElementById('giveAmount').value);
+    if (!users[to]) return alert('❌ User not found');
+    if (isNaN(amount)) return alert('❌ Invalid amount');
+    users[to].money = (users[to].money || 0) + amount;
+    saveUsers();
+    updateMoneyDisplay();
+    alert(`✅ Gave $${amount} to ${to}`);
+    toggleOwnerPanel();
+    toggleOwnerPanel(); // refresh list
+  }
 
-      accounts[user] = { password: pass, money: 0, role: "user" };
-      localStorage.setItem("accounts", JSON.stringify(accounts));
-      alert("✅ Account created! You can login now.");
-    }
+  function showLogin() {
+    document.getElementById('homeUI').classList.add('hidden');
+    document.getElementById('loginUI').classList.remove('hidden');
+  }
 
-    function logout() {
-      localStorage.removeItem("currentUser");
-      location.reload();
-    }
+  function showCreate() {
+    document.getElementById('homeUI').classList.add('hidden');
+    document.getElementById('createUI').classList.remove('hidden');
+  }
 
-    function showUI() {
-      if (!accounts[currentUser]) return logout();
+  function backToHome() {
+    document.getElementById('loginUI').classList.add('hidden');
+    document.getElementById('createUI').classList.add('hidden');
+    document.getElementById('homeUI').classList.remove('hidden');
+  }
 
-      document.getElementById("loginUI").style.display = "none";
-      document.getElementById("mainUI").style.display = "block";
-      document.getElementById("profileUI").style.display = "block";
-      document.getElementById("currentUserText").textContent = "Logged in as: " + currentUser;
+  // Auto-login if saved
+  if (currentUser && users[currentUser]) {
+    showMainUI();
+  }
+</script>
 
-      updateMoney();
-
-      if (accounts[currentUser].role === "owner") {
-        document.getElementById("ownerPanel").style.display = "none";
-        document.getElementById("toggleOwnerPanel").style.display = "inline-block";
-        updateAccountList();
-      } else {
-        document.getElementById("ownerPanel").style.display = "none";
-      }
-    }
-
-    function updateMoney() {
-      let m = accounts[currentUser]?.money ?? 0;
-      document.getElementById("moneyDisplay").textContent = "💰 Money: $" + m;
-    }
-
-    function updateAccountList() {
-      let text = "";
-      for (let name in accounts) {
-        text += `• ${name}: $${accounts[name].money ?? 0}\n`;
-      }
-      document.getElementById("accountsList").value = text;
-    }
-
-    function giveMoney() {
-      let toUser = document.getElementById("giveUser").value;
-      let amount = parseInt(document.getElementById("giveAmount").value);
-      if (!accounts[toUser]) return alert("User not found");
-      if (isNaN(amount) || amount <= 0) return alert("Invalid amount");
-
-      accounts[toUser].money = (accounts[toUser].money || 0) + amount;
-      localStorage.setItem("accounts", JSON.stringify(accounts));
-      updateMoney();
-      updateAccountList();
-      alert(`✅ Gave $${amount} to ${toUser}`);
-    }
-
-    function toggleOwnerPanel() {
-      let panel = document.getElementById("ownerPanel");
-      panel.style.display = panel.style.display === "none" ? "block" : "none";
-    }
-
-    // Show UI if already logged in
-    if (currentUser && accounts[currentUser]) {
-      showUI();
-    }
-  </script>
 </body>
 </html>
