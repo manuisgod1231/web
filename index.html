@@ -164,6 +164,12 @@
       user-select: text;
     }
 
+    /* Toggle owner panel button */
+    #toggleOwnerPanelBtn {
+      display: none;
+      margin-bottom: 10px;
+    }
+
   </style>
 </head>
 <body>
@@ -182,6 +188,9 @@
   <div class="ui-box" id="mainUI" style="display:none;">
     <h2>Welcome!</h2>
     <p id="welcomeMessage"></p>
+
+    <!-- Toggle Owner Panel Button -->
+    <button id="toggleOwnerPanelBtn">Toggle Owner Panel</button>
 
     <!-- Owner Panel -->
     <div id="ownerPanel">
@@ -245,12 +254,13 @@
     updateMoneyDisplay();
     clearInputs();
 
-    // ถ้าเป็น owner แสดง panel
     if (currentUser === ownerName) {
       document.getElementById("ownerPanel").style.display = "block";
+      document.getElementById("toggleOwnerPanelBtn").style.display = "inline-block";
       updateAccountsList();
     } else {
       document.getElementById("ownerPanel").style.display = "none";
+      document.getElementById("toggleOwnerPanelBtn").style.display = "none";
     }
   }
 
@@ -388,6 +398,18 @@
     document.getElementById("giveMoneyAmount").value = "";
   }
 
+  // ปุ่ม toggle owner panel
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById("toggleOwnerPanelBtn").addEventListener("click", () => {
+      let panel = document.getElementById("ownerPanel");
+      if (panel.style.display === "block") {
+        panel.style.display = "none";
+      } else {
+        panel.style.display = "block";
+      }
+    });
+  });
+
   window.onload = function() {
     accounts = JSON.parse(localStorage.getItem('accounts')) || {};
 
@@ -409,7 +431,6 @@
     document.getElementById('profileBtn').addEventListener('click', toggleProfile);
     document.getElementById('profileLogoutBtn').addEventListener('click', logout);
     document.getElementById('closeProfileBtn').addEventListener('click', closeProfile);
-
     document.getElementById('giveMoneyBtn').addEventListener('click', giveMoney);
   };
 </script>
