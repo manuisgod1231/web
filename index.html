@@ -19,15 +19,31 @@
       width: 300px;
       margin: 100px auto;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-      transition: all 0.3s ease;
+      transition: all 0.4s ease;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .panel.hidden {
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: all 0.4s ease;
     }
 
     input {
       padding: 8px;
-      margin: 8px;
+      margin: 8px 0;
       border: none;
       border-radius: 5px;
       width: 80%;
+      background-color: #444;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    input:focus {
+      background-color: #555;
+      outline: none;
     }
 
     button {
@@ -38,7 +54,7 @@
       background-color: #4caf50;
       color: white;
       cursor: pointer;
-      transition: 0.2s ease;
+      transition: background-color 0.3s ease, transform 0.2s ease;
     }
 
     button:hover {
@@ -57,20 +73,11 @@
       border-radius: 8px;
       box-shadow: 0 0 10px #0f0;
       display: none;
+      transition: opacity 0.4s ease;
     }
 
     #profilePanel, #ownerPanel, #mainUI {
       display: none;
-    }
-
-    #ownerPanel.show {
-      display: block;
-      animation: fadeIn 0.4s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .toggle-btn {
@@ -84,8 +91,12 @@
       color: white;
       cursor: pointer;
       display: none;
+      transition: background-color 0.3s ease, transform 0.2s ease;
     }
-
+    .toggle-btn:hover {
+      background-color: #444;
+      transform: scale(1.1);
+    }
   </style>
 </head>
 <body>
@@ -99,7 +110,7 @@
   <p id="loginMsg"></p>
 </div>
 
-<div id="createPanel" class="panel" style="display:none;">
+<div id="createPanel" class="panel hidden" style="display:none;">
   <h2>Create Account</h2>
   <input id="createUser" placeholder="Username"><br>
   <input id="createPass" placeholder="Password" type="password"><br>
@@ -113,13 +124,13 @@
   <button class="toggle-btn" onclick="toggleProfile()">👤</button>
 </div>
 
-<div id="profilePanel" class="panel">
+<div id="profilePanel" class="panel hidden">
   <h3>👤 Profile</h3>
   <button onclick="logout()">Logout</button>
   <button id="ownerToggleBtn" onclick="toggleOwnerPanel()" style="display:none;">Toggle Owner Panel</button>
 </div>
 
-<div id="ownerPanel" class="panel">
+<div id="ownerPanel" class="panel hidden">
   <h3>👑 Owner Panel</h3>
   <input id="giveUser" placeholder="User to give money">
   <input id="giveAmount" placeholder="Amount" type="number">
@@ -137,6 +148,16 @@
 
   function getAccounts() {
     return JSON.parse(localStorage.getItem("accounts") || "{}");
+  }
+
+  function showElement(el) {
+    el.style.display = "block";
+    setTimeout(() => el.classList.remove("hidden"), 20);
+  }
+
+  function hideElement(el) {
+    el.classList.add("hidden");
+    setTimeout(() => { el.style.display = "none"; }, 400);
   }
 
   function login() {
@@ -171,17 +192,18 @@
   }
 
   function showMain() {
-    document.getElementById("loginPanel").style.display = "none";
-    document.getElementById("createPanel").style.display = "none";
-    document.getElementById("mainUI").style.display = "block";
-    document.getElementById("profilePanel").style.display = "none";
-    document.getElementById("ownerPanel").style.display = "none";
+    hideElement(document.getElementById("loginPanel"));
+    hideElement(document.getElementById("createPanel"));
+    showElement(document.getElementById("mainUI"));
+    hideElement(document.getElementById("profilePanel"));
+    hideElement(document.getElementById("ownerPanel"));
 
     updateMoney();
     updateAccountList();
 
     // Show profile toggle button only when logged in
-    document.querySelector(".toggle-btn").style.display = "block";
+    const toggleBtn = document.querySelector(".toggle-btn");
+    toggleBtn.style.display = "block";
 
     // Show owner toggle button only for owner
     const ownerToggleBtn = document.getElementById("ownerToggleBtn");
@@ -193,11 +215,11 @@
   }
 
   function showLogin() {
-    document.getElementById("loginPanel").style.display = "block";
-    document.getElementById("createPanel").style.display = "none";
-    document.getElementById("mainUI").style.display = "none";
-    document.getElementById("profilePanel").style.display = "none";
-    document.getElementById("ownerPanel").style.display = "none";
+    showElement(document.getElementById("loginPanel"));
+    hideElement(document.getElementById("createPanel"));
+    hideElement(document.getElementById("mainUI"));
+    hideElement(document.getElementById("profilePanel"));
+    hideElement(document.getElementById("ownerPanel"));
 
     // Hide profile toggle button when not logged in
     document.querySelector(".toggle-btn").style.display = "none";
@@ -208,13 +230,17 @@
   }
 
   function showCreate() {
-    document.getElementById("loginPanel").style.display = "none";
-    document.getElementById("createPanel").style.display = "block";
+    hideElement(document.getElementById("loginPanel"));
+    showElement(document.getElementById("createPanel"));
   }
 
   function toggleProfile() {
     const profile = document.getElementById("profilePanel");
-    profile.style.display = profile.style.display === "none" || profile.style.display === "" ? "block" : "none";
+    if (profile.style.display === "block") {
+      hideElement(profile);
+    } else {
+      showElement(profile);
+    }
   }
 
   function toggleOwnerPanel() {
@@ -223,7 +249,11 @@
       return;
     }
     const ownerPanel = document.getElementById("ownerPanel");
-    ownerPanel.classList.toggle("show");
+    if (ownerPanel.style.display === "block") {
+      hideElement(ownerPanel);
+    } else {
+      showElement(ownerPanel);
+    }
     updateAccountList();
   }
 
@@ -261,10 +291,8 @@
     document.getElementById("accountList").innerHTML = list;
   }
 
-  // Auto-login if currentUser is set and valid
   window.onload = () => {
-    const accounts = getAccounts();
-    if (currentUser && accounts[currentUser]) {
+    if(currentUser && getAccounts()[currentUser]){
       showMain();
     } else {
       showLogin();
