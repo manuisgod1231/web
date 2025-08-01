@@ -3,514 +3,556 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>manuisgod UI with Owner Panel</title>
+<title>iOS16 Style Login & Owner Panel</title>
 <style>
+  /* Reset & base */
   * {
     box-sizing: border-box;
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
   }
   body {
-    font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
-    color: white;
-    text-align: center;
-    padding: 50px;
-    margin: 0;
-    position: relative;
+    margin: 0; padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    background: #f0f0f5;
+    color: #1c1c1e;
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
   }
-  .ui-box {
-    background-color: #2e2e2e;
-    padding: 30px;
-    border-radius: 15px;
-    display: inline-block;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-    animation: fadeIn 0.8s ease;
-    max-width: 350px;
+  .panel {
+    background: #fff;
+    width: 320px;
+    max-width: 95vw;
+    padding: 28px 24px;
+    border-radius: 28px;
+    box-shadow:
+      0 2px 5px rgba(0,0,0,0.05),
+      0 15px 30px rgba(0,0,0,0.1);
+    text-align: center;
+    user-select: none;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
   }
-  input[type="text"], input[type="password"], input[type="number"] {
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #444;
-    background-color: #1c1c1c;
-    color: white;
+  .panel.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  input {
     width: 100%;
-    margin-bottom: 12px;
-    outline: none;
+    padding: 16px 18px;
+    margin: 14px 0;
+    border: none;
+    border-radius: 20px;
+    background: #f2f2f7;
+    font-size: 17px;
+    color: #1c1c1e;
+    box-shadow:
+      inset 0 1px 3px rgba(0,0,0,0.06);
+    transition:
+      background-color 0.25s ease,
+      box-shadow 0.25s ease;
   }
-  input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
-    border-color: #007bff;
-    background-color: #262626;
+  input:focus {
+    outline: none;
+    background: #e5e5ea;
+    box-shadow:
+      inset 0 3px 6px rgba(0,0,0,0.12);
   }
   button {
-    padding: 12px 24px;
-    border: none;
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    color: white;
-    border-radius: 8px;
-    cursor: pointer;
-    margin: 5px 0;
-    font-weight: bold;
-    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
     width: 100%;
+    padding: 18px;
+    margin-top: 18px;
+    background: #007aff;
+    border: none;
+    border-radius: 24px;
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow:
+      0 8px 15px rgba(0,122,255,0.3);
+    transition:
+      background-color 0.3s ease,
+      box-shadow 0.3s ease,
+      transform 0.15s ease;
+    user-select: none;
   }
   button:hover {
+    background: #005ecb;
+    box-shadow:
+      0 10px 20px rgba(0,94,203,0.5);
     transform: scale(1.05);
-    box-shadow: 0 6px 14px rgba(0, 123, 255, 0.3);
   }
-  #outputText {
-    margin-top: 15px;
+  button:active {
+    transform: scale(0.95);
+  }
+  .msg {
+    margin-top: 12px;
     font-style: italic;
-    opacity: 0.9;
-  }
-  #profileBtn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, #007bff, #0056b3);
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
-    display: none;
-    z-index: 1000;
-  }
-  #profileBtn:hover {
-    box-shadow: 0 6px 14px rgba(0, 123, 255, 0.5);
-    transform: scale(1.1);
-  }
-  #profileBox {
-    position: fixed;
-    top: 60px;
-    right: 20px;
-    background-color: #2e2e2e;
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-    display: none;
-    width: 220px;
-    z-index: 1000;
-    text-align: left;
+    color: #ff3b30;
+    min-height: 20px;
   }
   #moneyDisplay {
     position: fixed;
-    top: 20px;
-    left: 20px;
-    background: #007bff;
-    padding: 8px 16px;
-    border-radius: 16px;
+    top: 24px;
+    left: 24px;
+    background: #fff;
+    padding: 12px 22px;
+    border-radius: 26px;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 18px;
+    color: #007aff;
+    box-shadow:
+      0 8px 25px rgba(0,122,255,0.3);
     user-select: none;
-    box-shadow: 0 4px 10px rgba(0,123,255,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
   }
-  /* Owner Panel */
+  #moneyDisplay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #profileToggleBtn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #fff;
+    border-radius: 50%;
+    width: 62px;
+    height: 62px;
+    border: none;
+    font-size: 30px;
+    color: #007aff;
+    box-shadow:
+      0 10px 28px rgba(0,122,255,0.35);
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.3s ease;
+    user-select: none;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #profileToggleBtn.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  #profileToggleBtn:hover {
+    transform: scale(1.1);
+    box-shadow:
+      0 14px 36px rgba(0,122,255,0.45);
+  }
+  #profileToggleBtn:active {
+    transform: scale(0.9);
+  }
+  #profilePanel {
+    position: fixed;
+    bottom: 100px;
+    right: 24px;
+    width: 320px;
+    background: #fff;
+    border-radius: 32px;
+    box-shadow:
+      0 15px 40px rgba(0,0,0,0.15);
+    padding: 24px;
+    text-align: left;
+    font-weight: 600;
+    color: #1c1c1e;
+    user-select: text;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  #profilePanel.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+  #profilePanel button {
+    width: 100%;
+    margin-top: 20px;
+    background: #ff3b30;
+    font-weight: 700;
+    border-radius: 24px;
+    padding: 16px 0;
+    box-shadow:
+      0 8px 20px rgba(255,59,48,0.35);
+    color: white;
+  }
   #ownerPanel {
-    display: none;
     position: fixed;
     bottom: 140px;
     right: 24px;
     width: 320px;
     background: #fff;
     border-radius: 32px;
-    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    box-shadow:
+      0 15px 40px rgba(0,0,0,0.15);
     padding: 24px;
     text-align: left;
     font-weight: 600;
     color: #1c1c1e;
     user-select: text;
-    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
   }
-  #ownerPanel h3 {
-    margin-top: 0;
+  #ownerPanel.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
-  #ownerPanel label {
-    font-weight: 600;
-    color: #333;
-  }
-  #ownerPanel input[type="text"],
-  #ownerPanel input[type="number"] {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 8px;
-    border-radius: 12px;
-    border: 1px solid #ccc;
-    font-weight: 600;
-    font-size: 14px;
-    color: #222;
-  }
-  #ownerPanel button {
-    width: 100%;
-    margin-bottom: 6px;
-    padding: 12px;
-    border: none;
-    border-radius: 20px;
-    font-weight: 700;
-    cursor: pointer;
-  }
-  #giveBtn { background: #28a745; color: #fff; }
-  #setBtn { background: #007bff; color: #fff; }
-  #removeBtn { background: #dc3545; color: #fff; }
-  #banBtn { background: #6c757d; color: #fff; }
-  #ownerPanel #accountList {
+  #accountList {
     max-height: 160px;
     overflow-y: auto;
+    margin-top: 15px;
     padding-right: 8px;
-    color: #444;
     font-weight: 500;
+    color: #444;
     border: 1px solid #eee;
     border-radius: 16px;
     background: #f9f9fb;
+  }
+  #ownerActions {
     margin-top: 20px;
   }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+  #ownerActions input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    box-sizing: border-box;
+    margin-top: 8px;
+  }
+  #ownerActions button {
+    width: 100%;
+    margin-top: 8px;
+    background: #007aff;
+    font-weight: 700;
+    border-radius: 24px;
+    padding: 12px 0;
+    box-shadow: 0 8px 20px rgba(0,122,255,0.35);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  #ownerActions button:hover {
+    background: #005ecb;
+  }
+  #ownerActions button.ban {
+    background: #ff3b30;
+  }
+  #ownerActions button.ban:hover {
+    background: #c62828;
+  }
+  #ownerMsg {
+    color: #007aff;
+    margin-top: 10px;
+    min-height: 18px;
   }
 </style>
 </head>
 <body>
 
-  <!-- Login UI -->
-  <div class="ui-box" id="loginBox">
-    <h2>Login</h2>
-    <input type="text" id="loginUsername" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="none" />
-    <input type="password" id="loginPassword" placeholder="Password" autocomplete="off" />
-    <button id="loginBtn">Login</button>
-    <button id="goToSignUpBtn">Create Account</button>
-    <p id="outputText"></p>
-  </div>
+<!-- Login Panel -->
+<div id="loginPanel" class="panel show">
+  <h2>Login</h2>
+  <input id="loginUser" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="none" />
+  <input id="loginPass" placeholder="Password" type="password" autocomplete="off" />
+  <button onclick="login()">Login</button>
+  <button onclick="showCreate()">Create Account</button>
+  <p id="loginMsg" class="msg"></p>
+</div>
 
-  <!-- Sign Up UI -->
-  <div class="ui-box" id="signUpBox" style="display:none;">
-    <h2>Create Account</h2>
-    <input type="text" id="signUpUsername" placeholder="Choose Username" autocomplete="off" autocorrect="off" autocapitalize="none" />
-    <input type="password" id="signUpPassword" placeholder="Choose Password" autocomplete="off" />
-    <button id="createAccBtn">Create Account</button>
-    <button id="backToLoginBtn">Back to Login</button>
-    <p id="signUpOutput"></p>
-  </div>
+<!-- Create Account Panel -->
+<div id="createPanel" class="panel">
+  <h2>Create Account</h2>
+  <input id="createUser" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="none" />
+  <input id="createPass" placeholder="Password" type="password" autocomplete="off" />
+  <button onclick="createAccount()">Create</button>
+  <button onclick="showLogin()">Back to Login</button>
+  <p id="createMsg" class="msg"></p>
+</div>
 
-  <!-- Main UI -->
-  <div class="ui-box" id="mainUI" style="display:none;">
-    <h2>Welcome!</h2>
-    <p id="welcomeMessage"></p>
-  </div>
+<!-- Money Display -->
+<div id="moneyDisplay">💰 Money: $0</div>
 
-  <!-- Profile Button -->
-  <button id="profileBtn" style="display:none;">Profile</button>
+<!-- Profile Toggle Button -->
+<button id="profileToggleBtn" title="Toggle Profile">👤</button>
 
-  <!-- Profile Box -->
-  <div id="profileBox">
-    <h3>Your Profile</h3>
-    <p><strong>Username:</strong> <span id="profileUsername"></span></p>
-    <button id="logoutBtn" style="background:#dc3545;">Logout</button>
-  </div>
+<!-- Profile Panel -->
+<div id="profilePanel">
+  <h3>Profile</h3>
+  <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+  <button onclick="logout()">Logout</button>
+  <button id="ownerToggleBtn" onclick="toggleOwnerPanel()" style="display:none;">Toggle Owner Panel</button>
+</div>
 
-  <!-- Money Display -->
-  <div id="moneyDisplay" style="display:none;">Money: $0</div>
-
-  <!-- Owner Panel -->
-  <div id="ownerPanel">
-    <h3>Owner Panel</h3>
-
-    <label for="ownerUserInput">User:</label>
-    <input type="text" id="ownerUserInput" placeholder="Username" autocomplete="off" autocorrect="off" autocapitalize="none" />
-
-    <label for="ownerAmountInput">Amount:</label>
-    <input type="number" id="ownerAmountInput" placeholder="Amount" min="0" />
-
+<!-- Owner Panel -->
+<div id="ownerPanel">
+  <h3>Owner Panel</h3>
+  <h4>Accounts List:</h4>
+  <div id="accountList"></div>
+  <div id="ownerActions">
+    <input id="targetUser" placeholder="Target username" />
+    <input id="amount" placeholder="Amount" type="number" />
     <button id="giveBtn">Give Money</button>
     <button id="setBtn">Set Money</button>
-    <button id="removeBtn">Remove Money</button>
-    <button id="banBtn">Ban User</button>
-
-    <h4>Accounts List:</h4>
-    <div id="accountList"></div>
+    <button id="banBtn" class="ban">Ban User</button>
+    <p id="ownerMsg"></p>
   </div>
+</div>
 
 <script>
-  // Accounts data stored as { username: { password, money } }
-  let accounts = JSON.parse(localStorage.getItem("accounts")) || {};
+  let accounts = JSON.parse(localStorage.getItem('accounts')) || {
+    manyu: { password: "Manuufo25252265", money: 1000 }
+  };
+  let currentUser = null;
 
-  // List of banned users
-  let bannedUsers = JSON.parse(localStorage.getItem("bannedUsers")) || [];
+  function showPanel(id) {
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("show"));
+    document.getElementById(id).classList.add("show");
+  }
 
-  // Current logged-in user
-  let currentUser = localStorage.getItem("currentUser") || null;
+  function showLogin() {
+    clearMessages();
+    showPanel("loginPanel");
+  }
+  function showCreate() {
+    clearMessages();
+    showPanel("createPanel");
+  }
+  function showMain() {
+    clearMessages();
+    document.getElementById("loginPanel").classList.remove("show");
+    document.getElementById("createPanel").classList.remove("show");
+    document.getElementById("profileToggleBtn").classList.add("show");
+    updateMoneyDisplay();
+    updateProfilePanel();
+  }
 
-  // Save accounts and banned users to localStorage
+  function clearMessages() {
+    document.getElementById("loginMsg").textContent = "";
+    document.getElementById("createMsg").textContent = "";
+    updateOwnerMsg("");
+  }
+
+  function login() {
+    const user = document.getElementById("loginUser").value.trim();
+    const pass = document.getElementById("loginPass").value;
+    if (!user || !pass) {
+      document.getElementById("loginMsg").textContent = "⚠️ Please enter username and password.";
+      return;
+    }
+    if (!accounts[user] || accounts[user].password !== pass) {
+      document.getElementById("loginMsg").textContent = "❌ Invalid credentials.";
+      return;
+    }
+    if (accounts[user].banned) {
+      document.getElementById("loginMsg").textContent = "⛔ Your account is banned.";
+      return;
+    }
+    currentUser = user;
+    saveCurrentUser();
+    document.getElementById("loginUser").value = "";
+    document.getElementById("loginPass").value = "";
+    showMain();
+  }
+
+  function createAccount() {
+    const user = document.getElementById("createUser").value.trim();
+    const pass = document.getElementById("createPass").value;
+    if (!user || !pass) {
+      document.getElementById("createMsg").textContent = "⚠️ Please fill all fields.";
+      return;
+    }
+    if (accounts[user]) {
+      document.getElementById("createMsg").textContent = "⚠️ Username already exists.";
+      return;
+    }
+    accounts[user] = { password: pass, money: 0 };
+    saveAccounts();
+    document.getElementById("createMsg").textContent = `🎉 Account "${user}" created! You can login now.`;
+    document.getElementById("createUser").value = "";
+    document.getElementById("createPass").value = "";
+  }
+
+  function logout() {
+    currentUser = null;
+    saveCurrentUser();
+    document.getElementById("profileToggleBtn").classList.remove("show");
+    hideProfilePanel();
+    hideOwnerPanel();
+    showLogin();
+  }
+
   function saveAccounts() {
     localStorage.setItem("accounts", JSON.stringify(accounts));
   }
-  function saveBannedUsers() {
-    localStorage.setItem("bannedUsers", JSON.stringify(bannedUsers));
-  }
 
-  // Check if user is banned
-  function isBanned(user) {
-    return bannedUsers.includes(user);
-  }
-
-  // UI Elements
-  const loginBox = document.getElementById("loginBox");
-  const signUpBox = document.getElementById("signUpBox");
-  const mainUI = document.getElementById("mainUI");
-  const profileBtn = document.getElementById("profileBtn");
-  const profileBox = document.getElementById("profileBox");
-  const moneyDisplay = document.getElementById("moneyDisplay");
-  const ownerPanel = document.getElementById("ownerPanel");
-
-  // Update money display for current user
-  function updateMoneyDisplay() {
-    if (currentUser && accounts[currentUser]) {
-      moneyDisplay.textContent = `Money: $${accounts[currentUser].money}`;
-      moneyDisplay.style.display = "block";
+  function saveCurrentUser() {
+    if (currentUser) {
+      localStorage.setItem("currentUser", currentUser);
     } else {
-      moneyDisplay.style.display = "none";
+      localStorage.removeItem("currentUser");
     }
   }
 
-  // Update accounts list in owner panel
+  function loadCurrentUser() {
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedUser && accounts[savedUser] && !accounts[savedUser].banned) {
+      currentUser = savedUser;
+      showMain();
+    } else {
+      currentUser = null;
+      showLogin();
+    }
+  }
+
+  function updateMoneyDisplay() {
+    if (currentUser) {
+      document.getElementById("moneyDisplay").textContent = `💰 Money: $${accounts[currentUser].money}`;
+      document.getElementById("moneyDisplay").classList.add("show");
+    } else {
+      document.getElementById("moneyDisplay").classList.remove("show");
+    }
+  }
+
+  // Profile toggle
+  const profileToggleBtn = document.getElementById("profileToggleBtn");
+  const profilePanel = document.getElementById("profilePanel");
+  let profileVisible = false;
+
+  profileToggleBtn.addEventListener("click", () => {
+    profileVisible = !profileVisible;
+    if (profileVisible) {
+      updateProfilePanel();
+      profilePanel.classList.add("show");
+    } else {
+      profilePanel.classList.remove("show");
+    }
+  });
+
+  function hideProfilePanel() {
+    profileVisible = false;
+    profilePanel.classList.remove("show");
+  }
+
+  function updateProfilePanel() {
+    document.getElementById("profileUsername").textContent = currentUser || "";
+    // แสดงปุ่ม owner panel เฉพาะ owner manyu
+    document.getElementById("ownerToggleBtn").style.display = (currentUser === "manyu") ? "block" : "none";
+  }
+
+  // Owner panel toggle
+  const ownerToggleBtn = document.getElementById("ownerToggleBtn");
+  const ownerPanel = document.getElementById("ownerPanel");
+  let ownerVisible = false;
+
+  ownerToggleBtn.addEventListener("click", () => {
+    ownerVisible = !ownerVisible;
+    if (ownerVisible) {
+      updateOwnerPanel();
+      ownerPanel.classList.add("show");
+    } else {
+      ownerPanel.classList.remove("show");
+    }
+  });
+
+  function hideOwnerPanel() {
+    ownerVisible = false;
+    ownerPanel.classList.remove("show");
+  }
+
   function updateOwnerPanel() {
     const listDiv = document.getElementById("accountList");
     listDiv.innerHTML = "";
     for (const user in accounts) {
-      let bannedMark = bannedUsers.includes(user) ? " (BANNED)" : "";
-      listDiv.innerHTML += `<div>${user}: $${accounts[user].money}${bannedMark}</div>`;
+      const bannedTag = accounts[user].banned ? " (BANNED)" : "";
+      listDiv.innerHTML += `<div>${user}: $${accounts[user].money}${bannedTag}</div>`;
     }
   }
 
-  // Show/hide owner panel - only for owner "manyu"
-  function toggleOwnerPanel() {
-    if (currentUser !== "manyu") {
-      alert("เฉพาะเจ้าของระบบเท่านั้นที่ใช้งานได้");
-      return;
-    }
-    if (ownerPanel.style.display === "block") {
-      ownerPanel.style.display = "none";
-    } else {
-      updateOwnerPanel();
-      ownerPanel.style.display = "block";
-    }
+  // Owner actions
+  const giveBtn = document.getElementById("giveBtn");
+  const setBtn = document.getElementById("setBtn");
+  const banBtn = document.getElementById("banBtn");
+  const targetUserInput = document.getElementById("targetUser");
+  const amountInput = document.getElementById("amount");
+  const ownerMsg = document.getElementById("ownerMsg");
+
+  function updateOwnerMsg(text, error = false) {
+    ownerMsg.textContent = text;
+    ownerMsg.style.color = error ? "#ff3b30" : "#007aff";
   }
 
-  // Clear all input fields inside a container
-  function clearInputs(container) {
-    const inputs = container.querySelectorAll("input");
-    inputs.forEach(input => input.value = "");
-  }
-
-  // Show profile box and fill username
-  function showProfile() {
-    document.getElementById("profileUsername").textContent = currentUser;
-    profileBox.style.display = "block";
-  }
-
-  // Hide profile box
-  function hideProfile() {
-    profileBox.style.display = "none";
-  }
-
-  // Log out function
-  function logout() {
-    currentUser = null;
-    localStorage.removeItem("currentUser");
-    mainUI.style.display = "none";
-    profileBtn.style.display = "none";
-    profileBox.style.display = "none";
-    moneyDisplay.style.display = "none";
-    ownerPanel.style.display = "none";
-    loginBox.style.display = "block";
-  }
-
-  // Login function
-  function login() {
-    const username = document.getElementById("loginUsername").value.trim();
-    const password = document.getElementById("loginPassword").value.trim();
-
-    if (!username || !password) {
-      document.getElementById("outputText").textContent = "⚠️ กรุณากรอกชื่อผู้ใช้และรหัสผ่าน";
+  giveBtn.onclick = () => {
+    const target = targetUserInput.value.trim();
+    const amount = parseInt(amountInput.value);
+    if (!target || isNaN(amount) || amount <= 0) {
+      updateOwnerMsg("⚠️ โปรดกรอกชื่อและจำนวนเงินที่ถูกต้อง", true);
       return;
     }
-    if (!accounts[username]) {
-      document.getElementById("outputText").textContent = `❌ ไม่พบบัญชีสำหรับ '${username}'`;
+    if (!accounts[target]) {
+      updateOwnerMsg("❌ ชื่อผู้ใช้ไม่ถูกต้อง", true);
       return;
     }
-    if (accounts[username].password !== password) {
-      document.getElementById("outputText").textContent = "❌ รหัสผ่านไม่ถูกต้อง";
-      return;
-    }
-    if (isBanned(username)) {
-      document.getElementById("outputText").textContent = "⛔ บัญชีนี้ถูกแบน";
-      return;
-    }
-    currentUser = username;
-    localStorage.setItem("currentUser", currentUser);
-    document.getElementById("outputText").textContent = "";
-    showMainUI();
-  }
-
-  // Create account function
-  function createAccount() {
-    const username = document.getElementById("signUpUsername").value.trim();
-    const password = document.getElementById("signUpPassword").value.trim();
-
-    if (!username || !password) {
-      document.getElementById("signUpOutput").textContent = "⚠️ กรุณากรอกชื่อผู้ใช้และรหัสผ่าน";
-      return;
-    }
-    if (accounts[username]) {
-      document.getElementById("signUpOutput").textContent = "⚠️ มีบัญชีนี้อยู่แล้ว";
-      return;
-    }
-
-    accounts[username] = { password: password, money: 0 };
-    saveAccounts();
-    document.getElementById("signUpOutput").textContent = `🎉 สร้างบัญชีสำหรับ ${username} เรียบร้อยแล้ว`;
-    clearInputs(signUpBox);
-  }
-
-  // Show main UI after login/signup
-  function showMainUI() {
-    loginBox.style.display = "none";
-    signUpBox.style.display = "none";
-    mainUI.style.display = "inline-block";
-    profileBtn.style.display = "block";
-    document.getElementById("welcomeMessage").textContent = `สวัสดี, ${currentUser}! ยินดีต้อนรับ`;
-    updateMoneyDisplay();
-  }
-
-  // Owner panel functions
-  function ownerGiveMoney() {
-    const user = document.getElementById("ownerUserInput").value.trim();
-    const amount = parseInt(document.getElementById("ownerAmountInput").value);
-    if (!user || isNaN(amount) || amount <= 0) {
-      alert("กรุณากรอกชื่อผู้ใช้และจำนวนเงินที่ถูกต้อง");
-      return;
-    }
-    if (!accounts[user]) {
-      alert("ไม่พบผู้ใช้นี้");
-      return;
-    }
-    if (isBanned(user)) {
-      alert("ผู้ใช้นี้ถูกแบน");
-      return;
-    }
-    accounts[user].money += amount;
+    accounts[target].money += amount;
     saveAccounts();
     updateOwnerPanel();
-    if (user === currentUser) updateMoneyDisplay();
-    alert(`เพิ่มเงิน $${amount} ให้ผู้ใช้ ${user} แล้ว`);
-  }
+    updateOwnerMsg(`🎉 เพิ่มเงินให้ ${target} จำนวน $${amount} สำเร็จ`);
+    if (target === currentUser) updateMoneyDisplay();
+  };
 
-  function ownerSetMoney() {
-    const user = document.getElementById("ownerUserInput").value.trim();
-    const amount = parseInt(document.getElementById("ownerAmountInput").value);
-    if (!user || isNaN(amount) || amount < 0) {
-      alert("กรุณากรอกชื่อผู้ใช้และจำนวนเงินที่ถูกต้อง");
+  setBtn.onclick = () => {
+    const target = targetUserInput.value.trim();
+    const amount = parseInt(amountInput.value);
+    if (!target || isNaN(amount) || amount < 0) {
+      updateOwnerMsg("⚠️ โปรดกรอกชื่อและจำนวนเงินที่ถูกต้อง", true);
       return;
     }
-    if (!accounts[user]) {
-      alert("ไม่พบผู้ใช้นี้");
+    if (!accounts[target]) {
+      updateOwnerMsg("❌ ชื่อผู้ใช้ไม่ถูกต้อง", true);
       return;
     }
-    if (isBanned(user)) {
-      alert("ผู้ใช้นี้ถูกแบน");
-      return;
-    }
-    accounts[user].money = amount;
+    accounts[target].money = amount;
     saveAccounts();
     updateOwnerPanel();
-    if (user === currentUser) updateMoneyDisplay();
-    alert(`ตั้งเงินผู้ใช้ ${user} เป็น $${amount} เรียบร้อยแล้ว`);
-  }
+    updateOwnerMsg(`🎉 ตั้งเงินของ ${target} เป็น $${amount} เรียบร้อย`);
+    if (target === currentUser) updateMoneyDisplay();
+  };
 
-  function ownerRemoveMoney() {
-    const user = document.getElementById("ownerUserInput").value.trim();
-    if (!user) {
-      alert("กรุณากรอกชื่อผู้ใช้");
+  banBtn.onclick = () => {
+    const target = targetUserInput.value.trim();
+    if (!target) {
+      updateOwnerMsg("⚠️ โปรดกรอกชื่อผู้ใช้", true);
       return;
     }
-    if (!accounts[user]) {
-      alert("ไม่พบผู้ใช้นี้");
+    if (!accounts[target]) {
+      updateOwnerMsg("❌ ชื่อผู้ใช้ไม่ถูกต้อง", true);
       return;
     }
-    if (isBanned(user)) {
-      alert("ผู้ใช้นี้ถูกแบน");
+    if (target === "manyu") {
+      updateOwnerMsg("❌ ไม่สามารถแบนเจ้าของระบบได้", true);
       return;
     }
-    accounts[user].money = 0;
+    accounts[target].banned = true;
     saveAccounts();
     updateOwnerPanel();
-    if (user === currentUser) updateMoneyDisplay();
-    alert(`ลบเงินผู้ใช้ ${user} เรียบร้อยแล้ว`);
-  }
+    updateOwnerMsg(`⚠️ แบนผู้ใช้ ${target} เรียบร้อย`);
+    if (currentUser === target) logout();
+  };
 
-  function ownerBanUser() {
-    const user = document.getElementById("ownerUserInput").value.trim();
-    if (!user) {
-      alert("กรุณากรอกชื่อผู้ใช้");
-      return;
-    }
-    if (!accounts[user]) {
-      alert("ไม่พบผู้ใช้นี้");
-      return;
-    }
-    if (isBanned(user)) {
-      alert("ผู้ใช้นี้ถูกแบนอยู่แล้ว");
-      return;
-    }
-    bannedUsers.push(user);
-    saveBannedUsers();
-    updateOwnerPanel();
-    alert(`แบนผู้ใช้ ${user} เรียบร้อยแล้ว`);
-    // ถ้าบุคคลที่ล็อกอินถูกแบน ให้ล็อกเอาท์อัตโนมัติ
-    if (user === currentUser) logout();
-  }
-
-  // Event listeners
   window.onload = () => {
-    // If already logged in, show main UI
-    if (currentUser && accounts[currentUser] && !isBanned(currentUser)) {
-      showMainUI();
-    } else {
-      logout(); // reset to login if invalid
-    }
-
-    document.getElementById("loginBtn").onclick = login;
-    document.getElementById("goToSignUpBtn").onclick = () => {
-      loginBox.style.display = "none";
-      signUpBox.style.display = "inline-block";
-      clearInputs(loginBox);
-      document.getElementById("outputText").textContent = "";
-    };
-    document.getElementById("createAccBtn").onclick = createAccount;
-    document.getElementById("backToLoginBtn").onclick = () => {
-      signUpBox.style.display = "none";
-      loginBox.style.display = "inline-block";
-      clearInputs(signUpBox);
-      document.getElementById("signUpOutput").textContent = "";
-    };
-    profileBtn.onclick = () => {
-      if (profileBox.style.display === "block") {
-        hideProfile();
-      } else {
-        showProfile();
-      }
-    };
-    document.getElementById("logoutBtn").onclick = logout;
-
-    // Owner panel toggle on Profile button long press (or double click)
-    profileBtn.ondblclick = toggleOwnerPanel;
-
-    // Owner panel buttons
-    document.getElementById("giveBtn").onclick = ownerGiveMoney;
-    document.getElementById("setBtn").onclick = ownerSetMoney;
-    document.getElementById("removeBtn").onclick = ownerRemoveMoney;
-    document.getElementById("banBtn").onclick = ownerBanUser;
+    loadCurrentUser();
   };
 </script>
 
