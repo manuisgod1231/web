@@ -4,16 +4,16 @@
   <title>ManuisGodWeb</title>
   <style>
     body {
-      font-family: Arial;
-      background-color: #111;
+      background: #111;
       color: white;
+      font-family: Arial;
       text-align: center;
       margin-top: 100px;
     }
     input, button {
       padding: 8px;
       margin: 5px;
-      border-radius: 6px;
+      border-radius: 5px;
     }
     #mainUI, #profileUI, #ownerPanel {
       display: none;
@@ -23,8 +23,8 @@
       top: 10px;
       left: 10px;
       background: #222;
-      padding: 6px 12px;
-      border-radius: 8px;
+      padding: 6px 10px;
+      border-radius: 10px;
     }
     #profileUI {
       position: absolute;
@@ -34,20 +34,17 @@
       padding: 10px;
       border-radius: 10px;
     }
-    #toggleOwnerUI {
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
 
   <div id="loginUI">
-    <h2>Login / Create Account</h2>
+    <h2>Login / Register</h2>
     <input id="username" placeholder="Username"><br>
-    <input id="password" type="password" placeholder="Password"><br>
+    <input id="password" placeholder="Password" type="password"><br>
     <button onclick="login()">Login</button>
-    <button onclick="createAccount()">Create Account</button>
-    <p id="loginMsg" style="color:red;"></p>
+    <button onclick="register()">Create Account</button>
+    <p id="msg" style="color: red;"></p>
   </div>
 
   <div id="mainUI">
@@ -57,14 +54,14 @@
       <h3>Profile</h3>
       <p id="currentUserText"></p>
       <button onclick="logout()">Logout</button><br>
-      <button id="toggleOwnerUI" onclick="toggleOwner()">Toggle Owner Panel</button>
+      <button onclick="toggleOwnerPanel()">Toggle Owner Panel</button>
     </div>
 
-    <div id="ownerPanel">
-      <h4>Owner Panel</h4>
+    <div id="ownerPanel" style="display:none;">
+      <h3>Owner Panel</h3>
       <textarea id="accountsList" rows="5" cols="30" readonly></textarea><br>
-      <input id="giveMoneyUser" placeholder="User to give"><br>
-      <input id="giveMoneyAmount" type="number" placeholder="Amount"><br>
+      <input id="giveUser" placeholder="User to Give"><br>
+      <input id="giveAmount" type="number" placeholder="Amount"><br>
       <button onclick="giveMoney()">Give</button>
     </div>
   </div>
@@ -72,7 +69,7 @@
   <script>
     let accounts = JSON.parse(localStorage.getItem("accounts")) || {};
 
-    // สร้าง owner ถ้ายังไม่มี
+    // Ensure default owner exists
     if (!accounts["manyu"]) {
       accounts["manyu"] = {
         password: "Manuufo25252265",
@@ -85,94 +82,86 @@
     let currentUser = localStorage.getItem("currentUser");
 
     function login() {
-      const u = document.getElementById("username").value;
-      const p = document.getElementById("password").value;
-
-      if (accounts[u] && accounts[u].password === p) {
-        currentUser = u;
-        localStorage.setItem("currentUser", u);
-        showMain();
+      let user = document.getElementById("username").value;
+      let pass = document.getElementById("password").value;
+      if (accounts[user] && accounts[user].password === pass) {
+        localStorage.setItem("currentUser", user);
+        currentUser = user;
+        showUI();
       } else {
-        document.getElementById("loginMsg").textContent = "❌ Invalid credentials";
+        document.getElementById("msg").textContent = "❌ Invalid credentials";
       }
     }
 
-    function createAccount() {
-      const u = document.getElementById("username").value;
-      const p = document.getElementById("password").value;
+    function register() {
+      let user = document.getElementById("username").value;
+      let pass = document.getElementById("password").value;
+      if (!user || !pass) return alert("Please enter username and password");
+      if (accounts[user]) return alert("Account already exists!");
 
-      if (!u || !p) return alert("Enter name and password");
-      if (accounts[u]) return alert("Account already exists");
-
-      accounts[u] = { password: p, money: 0, role: "user" };
+      accounts[user] = { password: pass, money: 0, role: "user" };
       localStorage.setItem("accounts", JSON.stringify(accounts));
-      alert("Account created!");
+      alert("✅ Account created! You can login now.");
     }
 
     function logout() {
       localStorage.removeItem("currentUser");
-      currentUser = null;
       location.reload();
     }
 
-    function showMain() {
+    function showUI() {
+      if (!accounts[currentUser]) return logout();
+
       document.getElementById("loginUI").style.display = "none";
       document.getElementById("mainUI").style.display = "block";
-
-      // ตรวจสอบว่าผู้ใช้ยังอยู่ใน accounts
-      if (!accounts[currentUser]) {
-        alert("❌ User not found. Please login again.");
-        logout();
-        return;
-      }
-
+      document.getElementById("profileUI").style.display = "block";
       document.getElementById("currentUserText").textContent = "Logged in as: " + currentUser;
+
       updateMoney();
-      updateAccountList();
 
       if (accounts[currentUser].role === "owner") {
-        document.getElementById("toggleOwnerUI").style.display = "inline-block";
+        document.getElementById("ownerPanel").style.display = "none";
+        document.getElementById("toggleOwnerPanel").style.display = "inline-block";
+        updateAccountList();
       } else {
-        document.getElementById("toggleOwnerUI").style.display = "none";
         document.getElementById("ownerPanel").style.display = "none";
       }
     }
 
     function updateMoney() {
-      let money = accounts[currentUser]?.money ?? 0;
-      document.getElementById("moneyDisplay").textContent = `💰 Money: $${money}`;
+      let m = accounts[currentUser]?.money ?? 0;
+      document.getElementById("moneyDisplay").textContent = "💰 Money: $" + m;
     }
 
     function updateAccountList() {
-      let list = "";
-      for (let user in accounts) {
-        const money = accounts[user].money ?? 0;
-        list += `• ${user}: $${money}\n`;
+      let text = "";
+      for (let name in accounts) {
+        text += `• ${name}: $${accounts[name].money ?? 0}\n`;
       }
-      document.getElementById("accountsList").value = list;
+      document.getElementById("accountsList").value = text;
     }
 
     function giveMoney() {
-      const to = document.getElementById("giveMoneyUser").value;
-      const amt = parseInt(document.getElementById("giveMoneyAmount").value);
-      if (!accounts[to]) return alert("User not found!");
-      if (isNaN(amt) || amt <= 0) return alert("Invalid amount");
+      let toUser = document.getElementById("giveUser").value;
+      let amount = parseInt(document.getElementById("giveAmount").value);
+      if (!accounts[toUser]) return alert("User not found");
+      if (isNaN(amount) || amount <= 0) return alert("Invalid amount");
 
-      accounts[to].money = (accounts[to].money || 0) + amt;
+      accounts[toUser].money = (accounts[toUser].money || 0) + amount;
       localStorage.setItem("accounts", JSON.stringify(accounts));
-      updateAccountList();
       updateMoney();
-      alert(`✅ Gave $${amt} to ${to}`);
+      updateAccountList();
+      alert(`✅ Gave $${amount} to ${toUser}`);
     }
 
-    function toggleOwner() {
-      const panel = document.getElementById("ownerPanel");
+    function toggleOwnerPanel() {
+      let panel = document.getElementById("ownerPanel");
       panel.style.display = panel.style.display === "none" ? "block" : "none";
     }
 
-    // โหลดเมื่อเปิดเว็บ (ถ้าเคย login)
+    // Show UI if already logged in
     if (currentUser && accounts[currentUser]) {
-      showMain();
+      showUI();
     }
   </script>
 </body>
