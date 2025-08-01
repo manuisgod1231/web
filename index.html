@@ -376,8 +376,12 @@
 
     accounts[targetUser].money = (accounts[targetUser].money || 0) + amount;
     saveAccounts();
-    updateMoneyDisplay();
     updateAccountsList();
+
+    // ถ้าเราเพิ่มเงินให้ตัวเอง ให้รีเฟรชแสดงเงินทันที
+    if (currentUser === targetUser) {
+      updateMoneyDisplay();
+    }
 
     alert(`Gave $${amount} to ${targetUser}.`);
     document.getElementById("giveMoneyUser").value = "";
