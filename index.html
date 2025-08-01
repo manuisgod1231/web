@@ -209,20 +209,6 @@
     pointer-events: auto;
     transform: translateY(0);
   }
-  #ownerPanel input {
-    margin-bottom: 12px;
-  }
-  #ownerPanel button {
-    width: 100%;
-    background: #007aff;
-    font-weight: 700;
-    border-radius: 24px;
-    padding: 16px 0;
-    box-shadow:
-      0 8px 25px rgba(0,122,255,0.3);
-    color: white;
-    margin-top: 10px;
-  }
   #accountList {
     max-height: 160px;
     overflow-y: auto;
@@ -275,9 +261,6 @@
 <!-- Owner Panel -->
 <div id="ownerPanel">
   <h3>Owner Panel</h3>
-  <input id="giveUser" placeholder="User to give money" autocomplete="off" autocorrect="off" autocapitalize="none" />
-  <input id="giveAmount" placeholder="Amount" type="number" min="1" />
-  <button onclick="giveMoney()">Give Money</button>
   <h4>Accounts List:</h4>
   <div id="accountList"></div>
 </div>
@@ -323,15 +306,12 @@
       document.getElementById("loginMsg").textContent = "⚠️ Please enter username and password.";
       return;
     }
-    if (!accounts[user]) {
-      document.getElementById("loginMsg").textContent = "❌ Invalid credentials.";
-      return;
-    }
-    if (accounts[user].password !== pass) {
+    if (!accounts[user] || accounts[user].password !== pass) {
       document.getElementById("loginMsg").textContent = "❌ Invalid credentials.";
       return;
     }
     currentUser = user;
+    saveCurrentUser();  // เก็บสถานะไว้
     document.getElementById("loginUser").value = "";
     document.getElementById("loginPass").value = "";
     showMain();
@@ -357,6 +337,7 @@
 
   function logout() {
     currentUser = null;
+    saveCurrentUser();  // ลบสถานะตอน logout
     document.getElementById("profileToggleBtn").classList.remove("show");
     hideProfilePanel();
     hideOwnerPanel();
@@ -365,6 +346,25 @@
 
   function saveAccounts() {
     localStorage.setItem("accounts", JSON.stringify(accounts));
+  }
+
+  function saveCurrentUser() {
+    if (currentUser) {
+      localStorage.setItem("currentUser", currentUser);
+    } else {
+      localStorage.removeItem("currentUser");
+    }
+  }
+
+  function loadCurrentUser() {
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedUser && accounts[savedUser]) {
+      currentUser = savedUser;
+      showMain();
+    } else {
+      currentUser = null;
+      showLogin();
+    }
   }
 
   function updateMoneyDisplay() {
@@ -398,7 +398,7 @@
 
   function updateProfilePanel() {
     document.getElementById("profileUsername").textContent = currentUser || "";
-    // Show owner toggle button only if currentUser is 'manyu' (owner)
+    // แสดงปุ่ม Owner Panel เฉพาะ owner 'manyu'
     document.getElementById("ownerToggleBtn").style.display = (currentUser === "manyu") ? "block" : "none";
   }
 
@@ -423,7 +423,7 @@
   }
 
   function updateOwnerPanel() {
-    // Update accounts list
+    // แสดงรายชื่อบัญชีและเงิน
     const listDiv = document.getElementById("accountList");
     listDiv.innerHTML = "";
     for (const user in accounts) {
@@ -431,31 +431,9 @@
     }
   }
 
-  // Owner gives money to others
-  function giveMoney() {
-    const targetUser = document.getElementById("giveUser").value.trim();
-    const amount = parseInt(document.getElementById("giveAmount").value, 10);
-
-    if (!targetUser || isNaN(amount) || amount <= 0) {
-      alert("Please enter valid username and amount.");
-      return;
-    }
-    if (!accounts[targetUser]) {
-      alert("User does not exist.");
-      return;
-    }
-    accounts[targetUser].money += amount;
-    saveAccounts();
-    updateMoneyDisplay();
-    updateOwnerPanel();
-    alert(`Gave $${amount} to ${targetUser}`);
-    document.getElementById("giveUser").value = "";
-    document.getElementById("giveAmount").value = "";
-  }
-
-  // Initialize page
+  // โหลดสถานะตอนเริ่มเว็บ
   window.onload = () => {
-    showLogin();
+    loadCurrentUser();
   };
 </script>
 
