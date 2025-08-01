@@ -1,412 +1,164 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>manuisgod UI</title>
+  <meta charset="UTF-8">
+  <title>Manu Web</title>
   <style>
-    /* CSS เดิม + ปรับ money display */
-    * {
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-    }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
-      color: white;
-      text-align: center;
-      padding: 50px;
-      margin: 0;
-      position: relative;
-      min-height: 100vh;
-    }
-    .ui-box {
-      background-color: #2e2e2e;
-      padding: 30px;
-      border-radius: 15px;
-      display: inline-block;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-      animation: fadeIn 0.8s ease;
-    }
-    input[type="text"], input[type="password"], input[type="number"] {
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #444;
-      background-color: #1c1c1c;
-      color: white;
-      width: 220px;
-      margin-bottom: 12px;
-      outline: none;
-    }
-    input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
-      border-color: #007bff;
-      background-color: #262626;
-    }
-    button {
-      padding: 12px 24px;
-      border: none;
-      background: linear-gradient(135deg, #007bff, #0056b3);
-      color: white;
-      border-radius: 8px;
-      cursor: pointer;
-      margin: 5px;
-      font-weight: bold;
-      box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
-    }
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 14px rgba(0, 123, 255, 0.3);
-    }
-    #outputText {
-      margin-top: 15px;
-      font-style: italic;
-      opacity: 0.9;
-    }
-    #profileBtn {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: linear-gradient(135deg, #007bff, #0056b3);
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
-      display: none;
-      z-index: 1000;
-    }
-    #profileBtn:hover {
-      box-shadow: 0 6px 14px rgba(0, 123, 255, 0.5);
-      transform: scale(1.1);
-    }
-    #profileBox {
-      position: fixed;
-      top: 60px;
-      right: 20px;
-      background-color: #2e2e2e;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-      display: none;
-      width: 250px;
-      z-index: 1000;
-      text-align: left;
-      color: white;
-    }
-    #profileBox button {
-      margin-top: 10px;
-      width: 100%;
-    }
-    #moneyDisplay {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      font-weight: bold;
-      font-size: 18px;
-      background: rgba(0,0,0,0.5);
-      padding: 8px 12px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.7);
-      user-select: none;
-      z-index: 1100;
-      display: none;
-      cursor: default;
-    }
-    #toggleOwnerPanelBtn {
-      margin-top: 10px;
-      width: 100%;
-      display: none;
-      background: linear-gradient(135deg, #28a745, #1c7c31);
-      color: white;
-      border: none;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #ownerPanel {
-      display: none;
-      margin-top: 10px;
-      background: #222;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-      color: white;
-      font-size: 14px;
-    }
-    #ownerPanel input {
-      width: 100%;
-      margin: 5px 0;
-      padding: 6px;
-      border-radius: 5px;
-      border: none;
-      outline: none;
-      box-sizing: border-box;
-    }
-    #ownerPanel button {
-      width: 100%;
-      padding: 8px;
-      background: #28a745;
-      border: none;
-      color: white;
-      font-weight: bold;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
+    body { font-family: sans-serif; background: #111; color: #fff; text-align: center; }
+    .hidden { display: none; }
+    .box { background: #222; padding: 20px; border-radius: 10px; margin: 20px auto; width: 300px; }
+    input, button { padding: 10px; margin: 5px; border-radius: 5px; border: none; }
+    #moneyDisplay { position: fixed; top: 10px; left: 10px; font-weight: bold; font-size: 18px; }
+    #profileBtn { position: fixed; top: 10px; right: 10px; }
+    #profileBox { position: fixed; top: 50px; right: 10px; background: #333; padding: 15px; border-radius: 10px; }
   </style>
 </head>
 <body>
 
-  <!-- Login UI -->
-  <div class="ui-box" id="loginBox">
-    <h2>Login</h2>
-    <input type="text" id="loginUsername" placeholder="Username"><br>
-    <input type="password" id="loginPassword" placeholder="Password"><br>
-    <button id="loginBtn">Login</button>
-    <button id="createAccBtn">Create Account</button>
-    <p id="outputText"></p>
+<div id="moneyDisplay" class="hidden">💰 Money: $0</div>
+
+<div class="box" id="loginBox">
+  <h2>Login</h2>
+  <input id="loginUser" placeholder="Username"><br>
+  <input id="loginPass" type="password" placeholder="Password"><br>
+  <button onclick="login()">Login</button>
+  <button onclick="toggleCreate()">Create Account</button>
+</div>
+
+<div class="box hidden" id="createBox">
+  <h2>Create Account</h2>
+  <input id="createUser" placeholder="Username"><br>
+  <input id="createPass" type="password" placeholder="Password"><br>
+  <button onclick="createAccount()">Create</button>
+  <button onclick="toggleCreate()">Back to Login</button>
+</div>
+
+<div class="box hidden" id="mainUI">
+  <h2>Welcome, <span id="displayUser"></span>!</h2>
+  <button id="profileBtn" onclick="toggleProfile()">👤 Profile</button>
+</div>
+
+<div id="profileBox" class="hidden">
+  <h3>Profile</h3>
+  <button onclick="logout()">Logout</button>
+  <div id="ownerPanel" class="hidden">
+    <h4>Owner Panel</h4>
+    <input type="text" id="giveMoneyUser" placeholder="🎯 Target Username"><br>
+    <input type="number" id="giveMoneyAmount" placeholder="💵 Amount"><br>
+    <button onclick="giveMoney()">Give Money</button><br><br>
+    <pre id="accountsList"></pre>
   </div>
-
-  <!-- Main UI -->
-  <div class="ui-box" id="mainUI" style="display:none;">
-    <h2>Welcome!</h2>
-    <p id="welcomeMessage"></p>
-  </div>
-
-  <!-- Money Display -->
-  <p id="moneyDisplay">💰 Money: $0</p>
-
-  <!-- Profile Button -->
-  <button id="profileBtn" style="display:none;">Profile</button>
-
-  <!-- Profile Box -->
-  <div id="profileBox">
-    <h3>Your Profile</h3>
-    <p><strong>Username:</strong> <span id="profileUsername"></span></p>
-    <button id="profileLogoutBtn">Logout</button>
-    <button id="toggleOwnerPanelBtn">Toggle Owner Panel</button>
-
-    <div id="ownerPanel">
-      <label for="giveMoneyUser">Give Money To (username):</label>
-      <input type="text" id="giveMoneyUser" placeholder="Username">
-      <label for="giveMoneyAmount">Amount:</label>
-      <input type="number" id="giveMoneyAmount" placeholder="Amount" min="1">
-      <button id="giveMoneyBtn">Give Money</button>
-
-      <h4>Accounts List:</h4>
-      <pre id="accountsList" style="max-height: 150px; overflow-y: auto;"></pre>
-    </div>
-  </div>
+</div>
 
 <script>
-  let accounts = JSON.parse(localStorage.getItem('accounts')) || {};
-  let currentUser = null;
-  const ownerName = "manyu";
+let accounts = JSON.parse(localStorage.getItem("accounts")) || {
+  "manyu": { password: "Manuufo25252265", money: 1000 }
+};
+let currentUser = null;
 
-  function saveAccounts() {
-    localStorage.setItem('accounts', JSON.stringify(accounts));
-  }
+function toggleCreate() {
+  document.getElementById("loginBox").classList.toggle("hidden");
+  document.getElementById("createBox").classList.toggle("hidden");
+}
 
-  function clearInputs() {
-    document.getElementById("loginUsername").value = "";
-    document.getElementById("loginPassword").value = "";
-  }
+function login() {
+  const user = document.getElementById("loginUser").value.trim();
+  const pass = document.getElementById("loginPass").value;
 
-  function updateMoneyDisplay() {
-    if (currentUser && accounts[currentUser] && typeof accounts[currentUser].money === "number") {
-      document.getElementById("moneyDisplay").textContent = `💰 Money: $${accounts[currentUser].money}`;
-      document.getElementById("moneyDisplay").style.display = "block";
-    } else {
-      document.getElementById("moneyDisplay").textContent = `💰 Money: $0`;
-      document.getElementById("moneyDisplay").style.display = "block";
-    }
-  }
-
-  function updateAccountsList() {
-    let listEl = document.getElementById("accountsList");
-    if (!accounts || Object.keys(accounts).length === 0) {
-      listEl.textContent = "(no accounts)";
-      return;
-    }
-    let text = "";
-    for (let user in accounts) {
-      let money = (typeof accounts[user].money === "number") ? accounts[user].money : 0;
-      text += `• ${user}: $${money}\n`;
-    }
-    listEl.textContent = text;
-  }
-
-  function showMainUI() {
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("mainUI").style.display = "inline-block";
-    document.getElementById("welcomeMessage").textContent = `Hello, ${currentUser}! Welcome to the main UI.`;
-    updateMoneyDisplay();
-    clearInputs();
-  }
-
-  function logout() {
-    currentUser = null;
-    localStorage.removeItem('currentUser');
-    document.getElementById("mainUI").style.display = "none";
-    document.getElementById("loginBox").style.display = "inline-block";
-    document.getElementById("outputText").textContent = "";
-    hideProfileButton();
-    closeProfile();
-    document.getElementById("moneyDisplay").style.display = "none";
-  }
-
-  function showProfileButton() {
-    document.getElementById("profileBtn").style.display = "block";
-  }
-
-  function hideProfileButton() {
-    document.getElementById("profileBtn").style.display = "none";
-  }
-
-  function toggleProfile() {
-    const box = document.getElementById("profileBox");
-    if (box.style.display === "block") {
-      box.style.display = "none";
-    } else {
-      document.getElementById("profileUsername").textContent = currentUser;
-      box.style.display = "block";
-
-      if (currentUser === ownerName) {
-        document.getElementById("toggleOwnerPanelBtn").style.display = "block";
-      } else {
-        document.getElementById("toggleOwnerPanelBtn").style.display = "none";
-        document.getElementById("ownerPanel").style.display = "none";
-      }
-    }
-  }
-
-  function closeProfile() {
-    document.getElementById("profileBox").style.display = "none";
-  }
-
-  function login() {
-    let username = document.getElementById("loginUsername").value.trim();
-    let password = document.getElementById("loginPassword").value.trim();
-
-    if (username === "" || password === "") {
-      document.getElementById("outputText").textContent = "⚠️ Please enter both username and password.";
-      return;
-    }
-
-    if (!accounts[username]) {
-      document.getElementById("outputText").textContent = `❌ No account found for '${username}'.`;
-      return;
-    }
-
-    if (accounts[username].password !== password) {
-      document.getElementById("outputText").textContent = "❌ Incorrect password.";
-      return;
-    }
-
-    currentUser = username;
-    localStorage.setItem('currentUser', currentUser);
+  if (accounts[user] && accounts[user].password === pass) {
+    currentUser = user;
     showMainUI();
-    showProfileButton();
-    document.getElementById("outputText").textContent = "";
+  } else {
+    alert("❌ Invalid credentials");
   }
+}
 
-  function createAccount() {
-    let username = document.getElementById("loginUsername").value.trim();
-    let password = document.getElementById("loginPassword").value.trim();
+function createAccount() {
+  const user = document.getElementById("createUser").value.trim();
+  const pass = document.getElementById("createPass").value;
 
-    if (username === "" || password === "") {
-      document.getElementById("outputText").textContent = "⚠️ Please fill in both fields to create an account.";
-      return;
-    }
+  if (!user || !pass) return alert("⚠️ Please fill in all fields.");
+  if (accounts[user]) return alert("⚠️ Username already exists.");
 
-    if (accounts[username]) {
-      document.getElementById("outputText").textContent = "⚠️ Account already exists.";
-      return;
-    }
+  accounts[user] = { password: pass, money: 500 };
+  saveAccounts();
+  alert("✅ Account created!");
+  toggleCreate();
+}
 
-    accounts[username] = {
-      password: password,
-      money: 100
-    };
-    saveAccounts();
+function showMainUI() {
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("createBox").classList.add("hidden");
+  document.getElementById("mainUI").classList.remove("hidden");
+  document.getElementById("moneyDisplay").classList.remove("hidden");
 
-    currentUser = username;
-    localStorage.setItem('currentUser', currentUser);
-    showMainUI();
-    showProfileButton();
+  document.getElementById("displayUser").textContent = currentUser;
+  updateMoneyDisplay();
 
-    document.getElementById("outputText").textContent = `🎉 Account created and logged in as ${username}`;
-  }
-
-  function giveMoney() {
-    let targetUser = document.getElementById("giveMoneyUser").value.trim();
-    let amount = parseInt(document.getElementById("giveMoneyAmount").value);
-
-    if (targetUser === "") {
-      alert("Please enter a username to give money.");
-      return;
-    }
-    if (!accounts[targetUser]) {
-      alert("User not found.");
-      return;
-    }
-    if (isNaN(amount) || amount <= 0) {
-      alert("Please enter a valid positive amount.");
-      return;
-    }
-
-    if (currentUser !== ownerName) {
-      alert("Only owner can give money.");
-      return;
-    }
-
-    accounts[targetUser].money = (accounts[targetUser].money || 0) + amount;
-    saveAccounts();
+  if (currentUser === "manyu") {
+    document.getElementById("ownerPanel").classList.remove("hidden");
     updateAccountsList();
+  } else {
+    document.getElementById("ownerPanel").classList.add("hidden");
+  }
+}
 
-    if (currentUser === targetUser) {
-      updateMoneyDisplay();
-    }
+function logout() {
+  currentUser = null;
+  document.getElementById("mainUI").classList.add("hidden");
+  document.getElementById("moneyDisplay").classList.add("hidden");
+  document.getElementById("profileBox").classList.add("hidden");
+  document.getElementById("loginBox").classList.remove("hidden");
+}
 
-    alert(`Gave $${amount} to ${targetUser}.`);
-    document.getElementById("giveMoneyUser").value = "";
-    document.getElementById("giveMoneyAmount").value = "";
+function toggleProfile() {
+  document.getElementById("profileBox").classList.toggle("hidden");
+}
+
+function giveMoney() {
+  const targetUser = document.getElementById("giveMoneyUser").value.trim();
+  const amount = parseInt(document.getElementById("giveMoneyAmount").value.trim());
+
+  if (!targetUser || isNaN(amount) || amount <= 0) {
+    alert("⚠️ Invalid user or amount.");
+    return;
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('loginBtn').addEventListener('click', login);
-    document.getElementById('createAccBtn').addEventListener('click', createAccount);
-    document.getElementById('profileBtn').addEventListener('click', toggleProfile);
-    document.getElementById('profileLogoutBtn').addEventListener('click', logout);
-    document.getElementById('toggleOwnerPanelBtn').addEventListener('click', () => {
-      const ownerPanel = document.getElementById('ownerPanel');
-      if (ownerPanel.style.display === 'block') {
-        ownerPanel.style.display = 'none';
-      } else {
-        ownerPanel.style.display = 'block';
-        updateAccountsList();
-      }
-    });
-    document.getElementById('giveMoneyBtn').addEventListener('click', giveMoney);
-  });
+  if (!accounts[targetUser]) {
+    alert("❌ User not found.");
+    return;
+  }
 
-  window.onload = function() {
-    accounts = JSON.parse(localStorage.getItem('accounts')) || {};
+  if (accounts[currentUser].money < amount) {
+    alert("💸 Not enough money.");
+    return;
+  }
 
-    if (!accounts[ownerName]) {
-      accounts[ownerName] = { password: "Manuufo25252265", money: 1000 };
-      saveAccounts();
-    }
+  accounts[currentUser].money -= amount;
+  accounts[targetUser].money += amount;
 
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser && accounts[savedUser]) {
-      currentUser = savedUser;
-      showMainUI();
-      showProfileButton();
-    }
-  };
+  saveAccounts();
+  updateMoneyDisplay();
+  updateAccountsList();
+  alert(`✅ Gave $${amount} to ${targetUser}`);
+}
+
+function saveAccounts() {
+  localStorage.setItem("accounts", JSON.stringify(accounts));
+}
+
+function updateMoneyDisplay() {
+  if (currentUser && accounts[currentUser]) {
+    document.getElementById("moneyDisplay").textContent = `💰 Money: $${accounts[currentUser].money}`;
+  }
+}
+
+function updateAccountsList() {
+  const list = Object.entries(accounts)
+    .map(([user, acc]) => `• ${user}: $${acc.money ?? 0}`)
+    .join("\n");
+  document.getElementById("accountsList").textContent = list;
+}
 </script>
 
 </body>
