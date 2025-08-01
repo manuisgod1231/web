@@ -3,7 +3,99 @@
 <head>
   <title>manuisgod UI</title>
   <style>
-    /* ... โค้ด CSS เดิมของคุณ ... */
+    /* CSS เดิม + ปรับ money display */
+    * {
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
+      color: white;
+      text-align: center;
+      padding: 50px;
+      margin: 0;
+      position: relative;
+      min-height: 100vh;
+    }
+    .ui-box {
+      background-color: #2e2e2e;
+      padding: 30px;
+      border-radius: 15px;
+      display: inline-block;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.8s ease;
+    }
+    input[type="text"], input[type="password"], input[type="number"] {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background-color: #1c1c1c;
+      color: white;
+      width: 220px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus {
+      border-color: #007bff;
+      background-color: #262626;
+    }
+    button {
+      padding: 12px 24px;
+      border: none;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 5px;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2);
+    }
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 14px rgba(0, 123, 255, 0.3);
+    }
+    #outputText {
+      margin-top: 15px;
+      font-style: italic;
+      opacity: 0.9;
+    }
+    #profileBtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+      display: none;
+      z-index: 1000;
+    }
+    #profileBtn:hover {
+      box-shadow: 0 6px 14px rgba(0, 123, 255, 0.5);
+      transform: scale(1.1);
+    }
+    #profileBox {
+      position: fixed;
+      top: 60px;
+      right: 20px;
+      background-color: #2e2e2e;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      display: none;
+      width: 250px;
+      z-index: 1000;
+      text-align: left;
+      color: white;
+    }
+    #profileBox button {
+      margin-top: 10px;
+      width: 100%;
+    }
     #moneyDisplay {
       position: fixed;
       top: 20px;
@@ -22,7 +114,7 @@
     #toggleOwnerPanelBtn {
       margin-top: 10px;
       width: 100%;
-      display: none; /* แสดงเฉพาะ owner */
+      display: none;
       background: linear-gradient(135deg, #28a745, #1c7c31);
       color: white;
       border: none;
@@ -47,6 +139,7 @@
       border-radius: 5px;
       border: none;
       outline: none;
+      box-sizing: border-box;
     }
     #ownerPanel button {
       width: 100%;
@@ -57,6 +150,10 @@
       font-weight: bold;
       border-radius: 5px;
       cursor: pointer;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
     }
   </style>
 </head>
@@ -85,15 +182,12 @@
   <button id="profileBtn" style="display:none;">Profile</button>
 
   <!-- Profile Box -->
-  <div id="profileBox" style="display:none; text-align:left; width: 250px; background:#2e2e2e; padding:15px; border-radius:15px; position: fixed; top: 60px; right: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.6); color:white; z-index:1000;">
+  <div id="profileBox">
     <h3>Your Profile</h3>
     <p><strong>Username:</strong> <span id="profileUsername"></span></p>
     <button id="profileLogoutBtn">Logout</button>
-
-    <!-- Toggle Owner Panel ปุ่ม -->
     <button id="toggleOwnerPanelBtn">Toggle Owner Panel</button>
 
-    <!-- Owner Panel -->
     <div id="ownerPanel">
       <label for="giveMoneyUser">Give Money To (username):</label>
       <input type="text" id="giveMoneyUser" placeholder="Username">
@@ -121,12 +215,12 @@
   }
 
   function updateMoneyDisplay() {
-    if (currentUser && accounts[currentUser] && accounts[currentUser].money !== undefined) {
+    if (currentUser && accounts[currentUser] && typeof accounts[currentUser].money === "number") {
       document.getElementById("moneyDisplay").textContent = `💰 Money: $${accounts[currentUser].money}`;
       document.getElementById("moneyDisplay").style.display = "block";
     } else {
       document.getElementById("moneyDisplay").textContent = `💰 Money: $0`;
-      document.getElementById("moneyDisplay").style.display = "none";
+      document.getElementById("moneyDisplay").style.display = "block";
     }
   }
 
@@ -138,7 +232,8 @@
     }
     let text = "";
     for (let user in accounts) {
-      text += `• ${user}: $${accounts[user].money}\n`;
+      let money = (typeof accounts[user].money === "number") ? accounts[user].money : 0;
+      text += `• ${user}: $${money}\n`;
     }
     listEl.textContent = text;
   }
@@ -178,12 +273,11 @@
       document.getElementById("profileUsername").textContent = currentUser;
       box.style.display = "block";
 
-      // แสดงปุ่ม toggleOwnerPanelBtn เฉพาะ owner
       if (currentUser === ownerName) {
         document.getElementById("toggleOwnerPanelBtn").style.display = "block";
       } else {
         document.getElementById("toggleOwnerPanelBtn").style.display = "none";
-        document.getElementById("ownerPanel").style.display = "none"; // ซ่อน panel owner ถ้าไม่ใช่ owner
+        document.getElementById("ownerPanel").style.display = "none";
       }
     }
   }
@@ -263,7 +357,6 @@
       return;
     }
 
-    // owner เท่านั้นที่ให้เงินได้
     if (currentUser !== ownerName) {
       alert("Only owner can give money.");
       return;
@@ -273,7 +366,6 @@
     saveAccounts();
     updateAccountsList();
 
-    // ถ้าเจ้าของเงินเป็นคนรับเงินด้วย ให้ update display ด้วย
     if (currentUser === targetUser) {
       updateMoneyDisplay();
     }
@@ -283,20 +375,6 @@
     document.getElementById("giveMoneyAmount").value = "";
   }
 
-  function updateAccountsList() {
-    let listEl = document.getElementById("accountsList");
-    if (!accounts || Object.keys(accounts).length === 0) {
-      listEl.textContent = "(no accounts)";
-      return;
-    }
-    let text = "";
-    for (let user in accounts) {
-      text += `• ${user}: $${accounts[user].money}\n`;
-    }
-    listEl.textContent = text;
-  }
-
-  // Event listeners
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginBtn').addEventListener('click', login);
     document.getElementById('createAccBtn').addEventListener('click', createAccount);
@@ -317,13 +395,11 @@
   window.onload = function() {
     accounts = JSON.parse(localStorage.getItem('accounts')) || {};
 
-    // สร้าง owner ถ้ายังไม่มี
     if (!accounts[ownerName]) {
       accounts[ownerName] = { password: "Manuufo25252265", money: 1000 };
       saveAccounts();
     }
 
-    // โหลด user ที่ล็อกอินล่าสุดถ้ามี
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser && accounts[savedUser]) {
       currentUser = savedUser;
