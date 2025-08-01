@@ -56,6 +56,7 @@
       padding: 8px 14px;
       border-radius: 8px;
       box-shadow: 0 0 10px #0f0;
+      display: none;
     }
 
     #profilePanel, #ownerPanel, #mainUI {
@@ -82,6 +83,7 @@
       border-radius: 8px;
       color: white;
       cursor: pointer;
+      display: none;
     }
 
   </style>
@@ -108,13 +110,13 @@
 
 <div id="mainUI">
   <div id="moneyDisplay">💰 Money: $0</div>
-  <button onclick="toggleProfile()" style="position: fixed; top: 15px; right: 15px;">Profile</button>
+  <button class="toggle-btn" onclick="toggleProfile()">👤</button>
 </div>
 
 <div id="profilePanel" class="panel">
   <h3>👤 Profile</h3>
   <button onclick="logout()">Logout</button>
-  <button onclick="toggleOwnerPanel()">Toggle Owner Panel</button>
+  <button id="ownerToggleBtn" onclick="toggleOwnerPanel()" style="display:none;">Toggle Owner Panel</button>
 </div>
 
 <div id="ownerPanel" class="panel">
@@ -125,8 +127,6 @@
   <h4>📃 Accounts List:</h4>
   <div id="accountList"></div>
 </div>
-
-<button class="toggle-btn" onclick="toggleProfile()">👤</button>
 
 <script>
   let currentUser = null;
@@ -176,8 +176,20 @@
     document.getElementById("mainUI").style.display = "block";
     document.getElementById("profilePanel").style.display = "none";
     document.getElementById("ownerPanel").style.display = "none";
+
     updateMoney();
     updateAccountList();
+
+    // Show profile toggle button only when logged in
+    document.querySelector(".toggle-btn").style.display = "block";
+
+    // Show owner toggle button only for owner
+    const ownerToggleBtn = document.getElementById("ownerToggleBtn");
+    if (currentUser === "manyu") {
+      ownerToggleBtn.style.display = "inline-block";
+    } else {
+      ownerToggleBtn.style.display = "none";
+    }
   }
 
   function showLogin() {
@@ -186,6 +198,13 @@
     document.getElementById("mainUI").style.display = "none";
     document.getElementById("profilePanel").style.display = "none";
     document.getElementById("ownerPanel").style.display = "none";
+
+    // Hide profile toggle button when not logged in
+    document.querySelector(".toggle-btn").style.display = "none";
+
+    // Clear messages
+    loginMsg.textContent = "";
+    createMsg.textContent = "";
   }
 
   function showCreate() {
@@ -195,15 +214,15 @@
 
   function toggleProfile() {
     const profile = document.getElementById("profilePanel");
-    profile.style.display = profile.style.display === "none" ? "block" : "none";
+    profile.style.display = profile.style.display === "none" || profile.style.display === "" ? "block" : "none";
   }
 
   function toggleOwnerPanel() {
-    const ownerPanel = document.getElementById("ownerPanel");
     if (currentUser !== "manyu") {
-      alert("You are not the owner!");
+      alert("❌ You are not the owner!");
       return;
     }
+    const ownerPanel = document.getElementById("ownerPanel");
     ownerPanel.classList.toggle("show");
     updateAccountList();
   }
@@ -212,7 +231,14 @@
     const user = giveUser.value.trim();
     const amount = parseInt(giveAmount.value);
     const accounts = getAccounts();
-    if (!accounts[user] || isNaN(amount)) return;
+    if (!accounts[user]) {
+      alert("❌ User not found");
+      return;
+    }
+    if (isNaN(amount) || amount <= 0) {
+      alert("❌ Invalid amount");
+      return;
+    }
     accounts[user].money += amount;
     saveAccounts(accounts);
     updateAccountList();
@@ -222,7 +248,9 @@
   function updateMoney() {
     const accounts = getAccounts();
     const money = accounts[currentUser]?.money ?? 0;
-    document.getElementById("moneyDisplay").textContent = `💰 Money: $${money}`;
+    const moneyDisplay = document.getElementById("moneyDisplay");
+    moneyDisplay.textContent = `💰 Money: $${money}`;
+    moneyDisplay.style.display = "block";
   }
 
   function updateAccountList() {
@@ -233,10 +261,14 @@
     document.getElementById("accountList").innerHTML = list;
   }
 
-  // auto-login
+  // Auto-login if currentUser is set and valid
   window.onload = () => {
     const accounts = getAccounts();
-    if (accounts[currentUser]) showMain();
+    if (currentUser && accounts[currentUser]) {
+      showMain();
+    } else {
+      showLogin();
+    }
   }
 </script>
 
