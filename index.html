@@ -306,6 +306,7 @@
     <input id="amount" placeholder="Amount" type="number" />
     <button id="giveBtn">Give Money</button>
     <button id="setBtn">Set Money</button>
+    <button id="removeBtn">Remove Money</button>
     <button id="banBtn" class="ban">Ban User</button>
     <p id="ownerMsg"></p>
   </div>
@@ -448,7 +449,7 @@
 
   function updateProfilePanel() {
     document.getElementById("profileUsername").textContent = currentUser || "";
-    // แสดงปุ่ม owner panel เฉพาะ owner manyu
+    // Show owner panel toggle only for owner manyu
     document.getElementById("ownerToggleBtn").style.display = (currentUser === "manyu") ? "block" : "none";
   }
 
@@ -467,6 +468,16 @@
     }
   });
 
+  function toggleOwnerPanel() {
+    ownerVisible = !ownerVisible;
+    if (ownerVisible) {
+      updateOwnerPanel();
+      ownerPanel.classList.add("show");
+    } else {
+      ownerPanel.classList.remove("show");
+    }
+  }
+
   function hideOwnerPanel() {
     ownerVisible = false;
     ownerPanel.classList.remove("show");
@@ -484,6 +495,7 @@
   // Owner actions
   const giveBtn = document.getElementById("giveBtn");
   const setBtn = document.getElementById("setBtn");
+  const removeBtn = document.getElementById("removeBtn");
   const banBtn = document.getElementById("banBtn");
   const targetUserInput = document.getElementById("targetUser");
   const amountInput = document.getElementById("amount");
@@ -527,6 +539,28 @@
     saveAccounts();
     updateOwnerPanel();
     updateOwnerMsg(`🎉 ตั้งเงินของ ${target} เป็น $${amount} เรียบร้อย`);
+    if (target === currentUser) updateMoneyDisplay();
+  };
+
+  removeBtn.onclick = () => {
+    const target = targetUserInput.value.trim();
+    const amount = parseInt(amountInput.value);
+    if (!target || isNaN(amount) || amount <= 0) {
+      updateOwnerMsg("⚠️ โปรดกรอกชื่อและจำนวนเงินที่ถูกต้อง", true);
+      return;
+    }
+    if (!accounts[target]) {
+      updateOwnerMsg("❌ ชื่อผู้ใช้ไม่ถูกต้อง", true);
+      return;
+    }
+    if (accounts[target].money < amount) {
+      updateOwnerMsg(`❌ ${target} มีเงินไม่เพียงพอ`, true);
+      return;
+    }
+    accounts[target].money -= amount;
+    saveAccounts();
+    updateOwnerPanel();
+    updateOwnerMsg(`✅ ลบเงินของ ${target} จำนวน $${amount} เรียบร้อย`);
     if (target === currentUser) updateMoneyDisplay();
   };
 
