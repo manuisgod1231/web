@@ -129,7 +129,7 @@
   <div class="ui-box" id="mainUI" style="display:none;">
     <h2>Welcome!</h2>
     <p id="welcomeMessage"></p>
-    <button id="logoutBtn">Logout</button>
+    <!-- Logout button removed from here -->
   </div>
 
   <!-- Profile Button -->
@@ -191,7 +191,12 @@
 
     accounts[username] = password;
     saveAccounts();
-    document.getElementById("outputText").textContent = "🎉 Account created for " + username;
+    
+    currentUser = username;             // auto-login after create account
+    showMainUI();
+    showProfileButton();
+
+    document.getElementById("outputText").textContent = "🎉 Account created and logged in as " + username;
   }
 
   function showMainUI() {
@@ -239,11 +244,10 @@
     document.getElementById("profileBox").style.display = "none";
   }
 
-  // Bind event listeners after page load
   window.onload = function() {
     document.getElementById('loginBtn').addEventListener('click', login);
     document.getElementById('createAccBtn').addEventListener('click', createAccount);
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    // Removed logoutBtn event listener since logout button removed from main UI
     document.getElementById('profileBtn').addEventListener('click', toggleProfile);
     document.getElementById('closeProfileBtn').addEventListener('click', closeProfile);
     document.getElementById('profileLogoutBtn').addEventListener('click', logout);
