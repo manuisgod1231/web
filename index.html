@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Upload File by manyu</title>
+<title>iOS16 Style Login & Owner Panel with Upload & Payment</title>
 <style>
   /* Reset & base */
   * {
@@ -359,6 +359,42 @@
     background-color: #007aff;
     border-radius: 8px;
   }
+
+  /* Add Money Panel */
+  #addMoneyPanel {
+    margin-top: 20px;
+    background: #fff;
+    border-radius: 28px;
+    padding: 20px;
+    box-shadow:
+      0 2px 5px rgba(0,0,0,0.05),
+      0 15px 30px rgba(0,0,0,0.1);
+    width: 320px;
+    max-width: 95vw;
+    user-select: none;
+  }
+  #addMoneyPanel h3 {
+    margin: 0 0 12px;
+  }
+  #addMoneyPanel input[type="number"] {
+    width: 100%;
+    padding: 16px 18px;
+    margin: 14px 0;
+    border: none;
+    border-radius: 20px;
+    background: #f2f2f7;
+    font-size: 17px;
+    color: #1c1c1e;
+    box-shadow:
+      inset 0 1px 3px rgba(0,0,0,0.06);
+    transition:
+      background-color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+  #addMoneyPanel button {
+    background: #34c759;
+    font-weight: 700;
+  }
 </style>
 </head>
 <body>
@@ -432,6 +468,14 @@
   <div id="uploadFilesList">No files uploaded.</div>
 </div>
 
+<!-- Add Money Panel -->
+<div id="addMoneyPanel" style="display:none;">
+  <h3>Add Money</h3>
+  <input type="number" id="addAmount" placeholder="Enter amount" min="1" />
+  <button onclick="addMoney()">Add Money</button>
+  <p id="addMoneyMsg" class="msg"></p>
+</div>
+
 <script>
   // -------- STORAGE AND DATA --------
   let accounts = JSON.parse(localStorage.getItem('accounts')) || {
@@ -457,36 +501,31 @@
 
   // Constants
   const MAX_NORMAL_FILES = 1;
-  const MAX_NORMAL_FILE_SIZE = 1 * 1024 * 1024 * 1024; // 1GB
-  const MAX_PREMIUM_FILES = 9999;
+  const MAX_NORMAL_FILE_SIZE_MB = 6;
 
-  // -------- ELEMENTS --------
+  // -------- UI ELEMENTS --------
   const loginPanel = document.getElementById('loginPanel');
   const createPanel = document.getElementById('createPanel');
+  const loginUser = document.getElementById('loginUser');
+  const loginPass = document.getElementById('loginPass');
+  const loginMsg = document.getElementById('loginMsg');
+  const createUser = document.getElementById('createUser');
+  const createPass = document.getElementById('createPass');
+  const createMsg = document.getElementById('createMsg');
+
   const moneyDisplay = document.getElementById('moneyDisplay');
   const profileToggleBtn = document.getElementById('profileToggleBtn');
   const profilePanel = document.getElementById('profilePanel');
-  const ownerToggleBtn = document.getElementById('ownerToggleBtn');
-  const ownerPanel = document.getElementById('ownerPanel');
-  const accountListDiv = document.getElementById('accountList');
-  const ownerMsg = document.getElementById('ownerMsg');
-  const uploadPanel = document.getElementById('uploadPanel');
-  const uploadFilesList = document.getElementById('uploadFilesList');
-  const uploadMsg = document.getElementById('uploadMsg');
-  const fileInput = document.getElementById('fileInput');
-
-  const loginMsg = document.getElementById('loginMsg');
-  const createMsg = document.getElementById('createMsg');
-
-  // Profile settings inputs and display
-  const profileUsernameSpan = document.getElementById('profileUsername');
-  const profileNicknameSpan = document.getElementById('profileNickname');
-  const profilePremiumSpan = document.getElementById('profilePremium');
+  const profileUsername = document.getElementById('profileUsername');
+  const profileNickname = document.getElementById('profileNickname');
+  const profilePremium = document.getElementById('profilePremium');
   const profileLogoImg = document.getElementById('profileLogoImg');
   const nicknameInput = document.getElementById('nicknameInput');
   const profileLogoInput = document.getElementById('profileLogoInput');
+  const ownerToggleBtn = document.getElementById('ownerToggleBtn');
+  const ownerPanel = document.getElementById('ownerPanel');
 
-  // Owner panel inputs
+  const accountList = document.getElementById('accountList');
   const targetUserInput = document.getElementById('targetUser');
   const amountInput = document.getElementById('amount');
   const giveBtn = document.getElementById('giveBtn');
@@ -494,59 +533,141 @@
   const banBtn = document.getElementById('banBtn');
   const unbanBtn = document.getElementById('unbanBtn');
   const givePremiumBtn = document.getElementById('givePremiumBtn');
+  const ownerMsg = document.getElementById('ownerMsg');
 
-  // -------- UTILS --------
-  function saveAccounts() {
-    localStorage.setItem('accounts', JSON.stringify(accounts));
-  }
-  function saveUserFiles() {
-    localStorage.setItem('userFiles', JSON.stringify(userFiles));
-  }
-  function formatMB(bytes) {
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-  }
-  function isPremium(user) {
-    if (!user || !accounts[user]) return false;
-    const acc = accounts[user];
-    if (acc.premiumUntil === 'lifetime') return true;
-    if (acc.premiumUntil && Date.now() < acc.premiumUntil) return true;
-    return false;
-  }
-  function updateMoneyDisplay() {
-    if (!currentUser) {
-      moneyDisplay.classList.remove('show');
-      return;
-    }
-    const money = accounts[currentUser]?.money || 0;
-    moneyDisplay.textContent = `💰 Money: $${money}`;
-    moneyDisplay.classList.add('show');
-  }
-  function saveCurrentUser() {
-    localStorage.setItem('currentUser', currentUser);
-  }
-  function logout() {
-    currentUser = null;
-    saveCurrentUser();
-    showLogin();
-    updateMoneyDisplay();
-    updateProfilePanel();
-    uploadPanel.style.display = 'none';
-    ownerToggleBtn.style.display = 'none';
-    ownerPanel.classList.remove('show');
-    profilePanel.classList.remove('show');
-    profileToggleBtn.classList.remove('show');
-  }
+  const uploadPanel = document.getElementById('uploadPanel');
+  const fileInput = document.getElementById('fileInput');
+  const uploadMsg = document.getElementById('uploadMsg');
+  const uploadFilesList = document.getElementById('uploadFilesList');
+
+  const addMoneyPanel = document.getElementById('addMoneyPanel');
+  const addAmountInput = document.getElementById('addAmount');
+  const addMoneyMsg = document.getElementById('addMoneyMsg');
+
+  // -------- LOGIN & ACCOUNT --------
   function showLogin() {
-    loginPanel.classList.add('show');
     createPanel.classList.remove('show');
-    loginMsg.textContent = "";
-    createMsg.textContent = "";
+    loginPanel.classList.add('show');
+    loginMsg.textContent = '';
+    loginUser.value = '';
+    loginPass.value = '';
   }
   function showCreate() {
     loginPanel.classList.remove('show');
     createPanel.classList.add('show');
-    loginMsg.textContent = "";
-    createMsg.textContent = "";
+    createMsg.textContent = '';
+    createUser.value = '';
+    createPass.value = '';
+  }
+
+  function login() {
+    const user = loginUser.value.trim();
+    const pass = loginPass.value;
+    if (!user || !pass) {
+      loginMsg.textContent = 'Please enter username and password.';
+      return;
+    }
+    if (!accounts[user]) {
+      loginMsg.textContent = 'User not found.';
+      return;
+    }
+    if (accounts[user].password !== pass) {
+      loginMsg.textContent = 'Wrong password.';
+      return;
+    }
+    if (accounts[user].banned) {
+      loginMsg.textContent = 'This account is banned.';
+      return;
+    }
+    currentUser = user;
+    localStorage.setItem('currentUser', currentUser);
+    loginMsg.textContent = '';
+    showMainUI();
+  }
+
+  function createAccount() {
+    const user = createUser.value.trim();
+    const pass = createPass.value;
+    if (!user || !pass) {
+      createMsg.textContent = 'Please enter username and password.';
+      return;
+    }
+    if (accounts[user]) {
+      createMsg.textContent = 'Username already exists.';
+      return;
+    }
+    accounts[user] = {
+      password: pass,
+      money: 0,
+      nickname: "",
+      profileLogo: "",
+      banned: false,
+      premium: false,
+    };
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+    createMsg.textContent = 'Account created! Please log in.';
+    setTimeout(() => {
+      showLogin();
+    }, 1500);
+  }
+
+  function logout() {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    profilePanel.classList.remove('show');
+    ownerPanel.classList.remove('show');
+    uploadPanel.style.display = 'none';
+    addMoneyPanel.style.display = 'none';
+    moneyDisplay.classList.remove('show');
+    profileToggleBtn.classList.remove('show');
+    loginPanel.classList.add('show');
+  }
+
+  // -------- SHOW MAIN UI --------
+  function showMainUI() {
+    loginPanel.classList.remove('show');
+    createPanel.classList.remove('show');
+    moneyDisplay.classList.add('show');
+    profileToggleBtn.classList.add('show');
+
+    // Show upload and add money panels if owner
+    if (isOwner(currentUser)) {
+      ownerToggleBtn.style.display = 'block';
+      uploadPanel.style.display = 'block';
+      addMoneyPanel.style.display = 'block';
+    } else {
+      ownerToggleBtn.style.display = 'none';
+      uploadPanel.style.display = 'none';
+      addMoneyPanel.style.display = 'none';
+    }
+    updateMoneyDisplay();
+    updateProfileUI();
+    updateAccountList();
+  }
+
+  // -------- PROFILE --------
+  profileToggleBtn.onclick = () => {
+    profilePanel.classList.toggle('show');
+    ownerPanel.classList.remove('show');
+  };
+  ownerToggleBtn.onclick = () => {
+    ownerPanel.classList.toggle('show');
+  };
+
+  function updateProfileUI() {
+    if (!currentUser) return;
+    const acc = accounts[currentUser];
+    profileUsername.textContent = currentUser;
+    profileNickname.textContent = acc.nickname || "";
+    profilePremium.textContent = acc.premium ? "Yes" : "No";
+    if (acc.profileLogo) {
+      profileLogoImg.src = acc.profileLogo;
+      profileLogoImg.style.display = "block";
+    } else {
+      profileLogoImg.style.display = "none";
+    }
+    nicknameInput.value = acc.nickname || "";
+    profileLogoInput.value = acc.profileLogo || "";
   }
   function saveProfileSettings() {
     if (!currentUser) return;
@@ -554,271 +675,208 @@
     const logo = profileLogoInput.value.trim();
     accounts[currentUser].nickname = nick;
     accounts[currentUser].profileLogo = logo;
-    saveAccounts();
-    updateProfilePanel();
-    alert("Profile settings saved!");
-  }
-  function updateProfilePanel() {
-    if (!currentUser) return;
-    profileUsernameSpan.textContent = currentUser;
-    profileNicknameSpan.textContent = accounts[currentUser].nickname || "(none)";
-    profilePremiumSpan.textContent = isPremium(currentUser) ? "Yes" : "No";
-    if (accounts[currentUser].profileLogo) {
-      profileLogoImg.src = accounts[currentUser].profileLogo;
-      profileLogoImg.style.display = "block";
-    } else {
-      profileLogoImg.src = "";
-      profileLogoImg.style.display = "none";
-    }
-    nicknameInput.value = accounts[currentUser].nickname || "";
-    profileLogoInput.value = accounts[currentUser].profileLogo || "";
-  }
-  function formatDate(ts) {
-    const d = new Date(ts);
-    return d.toLocaleDateString() + " " + d.toLocaleTimeString();
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+    updateProfileUI();
+    alert("Settings saved.");
   }
 
-  // -------- LOGIN / CREATE --------
-  function login() {
-    const user = document.getElementById('loginUser').value.trim();
-    const pass = document.getElementById('loginPass').value;
-    if (!user || !pass) {
-      loginMsg.textContent = "Please enter username and password.";
-      return;
-    }
-    if (!accounts[user]) {
-      loginMsg.textContent = "User does not exist.";
-      return;
-    }
-    if (accounts[user].password !== pass) {
-      loginMsg.textContent = "Incorrect password.";
-      return;
-    }
-    if (accounts[user].banned) {
-      loginMsg.textContent = "You are banned.";
-      return;
-    }
-    currentUser = user;
-    saveCurrentUser();
-    loginMsg.textContent = "";
-    loginPanel.classList.remove('show');
-    createPanel.classList.remove('show');
-    profileToggleBtn.classList.add('show');
-    uploadPanel.style.display = 'block';
-    ownerToggleBtn.style.display = (currentUser === 'manyu') ? 'block' : 'none';
-    updateMoneyDisplay();
-    updateProfilePanel();
-    refreshUploadFileList();
+  // -------- MONEY --------
+  function updateMoneyDisplay() {
+    if (!currentUser) return;
+    const money = accounts[currentUser]?.money || 0;
+    moneyDisplay.textContent = `💰 Money: $${money}`;
   }
-  function createAccount() {
-    const user = document.getElementById('createUser').value.trim();
-    const pass = document.getElementById('createPass').value;
-    if (!user || !pass) {
-      createMsg.textContent = "Please enter username and password.";
+  function addMoney() {
+    if (!currentUser) {
+      addMoneyMsg.textContent = "Please log in.";
       return;
     }
-    if (accounts[user]) {
-      createMsg.textContent = "User already exists.";
+    if (!isOwner(currentUser)) {
+      addMoneyMsg.textContent = "Only owner can add money.";
       return;
     }
-    accounts[user] = { password: pass, money: 0, nickname: "", profileLogo: "" };
-    saveAccounts();
-    createMsg.textContent = "Account created! Please login.";
+    const amount = parseInt(addAmountInput.value);
+    if (!amount || amount <= 0) {
+      addMoneyMsg.textContent = "Enter a valid amount.";
+      return;
+    }
+    // Just add to current user money (owner)
+    accounts[currentUser].money += amount;
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+    updateMoneyDisplay();
+    addMoneyMsg.textContent = `Added $${amount} to your balance.`;
+    addAmountInput.value = "";
   }
 
   // -------- OWNER PANEL --------
-  function refreshAccountList() {
-    accountListDiv.innerHTML = "";
-    for (const u in accounts) {
-      let info = `${u} - Money: $${accounts[u].money || 0}`;
-      if (accounts[u].banned) info += " [BANNED]";
-      if (isPremium(u)) info += " [PREMIUM]";
-      if (accounts[u].nickname) info += ` [Nick: ${accounts[u].nickname}]`;
-      if (accounts[u].profileLogo) info += ` [Logo Set]`;
-      const div = document.createElement('div');
-      div.textContent = info;
-      accountListDiv.appendChild(div);
+  function isOwner(user) {
+    // Customize this with your owner username(s)
+    return user === "manyu";
+  }
+  function updateAccountList() {
+    accountList.innerHTML = "";
+    for (const user in accounts) {
+      let item = document.createElement('div');
+      item.style.marginBottom = '8px';
+      item.textContent = `${user} - Money: $${accounts[user].money}` +
+        (accounts[user].banned ? " [BANNED]" : "") +
+        (accounts[user].premium ? " [Premium]" : "");
+      accountList.appendChild(item);
     }
   }
 
   giveBtn.onclick = () => {
+    if (!isOwner(currentUser)) return;
     const target = targetUserInput.value.trim();
-    const amount = Number(amountInput.value);
-    if (!accounts[target]) { ownerMsg.textContent = "User not found."; return; }
-    if (isNaN(amount) || amount <= 0) { ownerMsg.textContent = "Invalid amount."; return; }
-    accounts[target].money = (accounts[target].money || 0) + amount;
-    saveAccounts();
-    ownerMsg.textContent = `Gave $${amount} to ${target}.`;
-    updateMoneyDisplay();
-    refreshAccountList();
-  };
-  setBtn.onclick = () => {
-    const target = targetUserInput.value.trim();
-    const amount = Number(amountInput.value);
-    if (!accounts[target]) { ownerMsg.textContent = "User not found."; return; }
-    if (isNaN(amount) || amount < 0) { ownerMsg.textContent = "Invalid amount."; return; }
-    accounts[target].money = amount;
-    saveAccounts();
-    ownerMsg.textContent = `Set $${amount} for ${target}.`;
-    updateMoneyDisplay();
-    refreshAccountList();
-  };
-  banBtn.onclick = () => {
-    const target = targetUserInput.value.trim();
-    if (!accounts[target]) { ownerMsg.textContent = "User not found."; return; }
-    accounts[target].banned = true;
-    saveAccounts();
-    ownerMsg.textContent = `Banned ${target}.`;
-    refreshAccountList();
-  };
-  unbanBtn.onclick = () => {
-    const target = targetUserInput.value.trim();
-    if (!accounts[target]) { ownerMsg.textContent = "User not found."; return; }
-    accounts[target].banned = false;
-    saveAccounts();
-    ownerMsg.textContent = `Unbanned ${target}.`;
-    refreshAccountList();
-  };
-  givePremiumBtn.onclick = () => {
-    const target = targetUserInput.value.trim();
-    if (!accounts[target]) { ownerMsg.textContent = "User not found."; return; }
-    // Give 30 days premium from now or lifetime for demo you can set your own
-    accounts[target].premiumUntil = Date.now() + 30*24*60*60*1000; // 30 days
-    saveAccounts();
-    ownerMsg.textContent = `Gave 30 days premium to ${target}.`;
-    refreshAccountList();
-    if (target === currentUser) updateProfilePanel();
-  };
-
-  // -------- PROFILE PANEL --------
-  profileToggleBtn.onclick = () => {
-    if (profilePanel.classList.contains('show')) {
-      profilePanel.classList.remove('show');
-      ownerPanel.classList.remove('show');
-    } else {
-      profilePanel.classList.add('show');
-      if (currentUser !== 'manyu') ownerPanel.classList.remove('show');
-    }
-  };
-
-  ownerToggleBtn.onclick = () => {
-    if (ownerPanel.classList.contains('show')) {
-      ownerPanel.classList.remove('show');
-    } else {
-      ownerPanel.classList.add('show');
-    }
-  };
-
-  // -------- UPLOAD PANEL --------
-
-  function setUploadMsg(msg) {
-    uploadMsg.textContent = msg;
-  }
-  function clearUploadMsg() {
-    uploadMsg.textContent = "";
-  }
-
-  function uploadFile() {
-    clearUploadMsg();
-    if (!currentUser) {
-      setUploadMsg('⚠️ Please login to upload files.');
+    const amt = parseInt(amountInput.value);
+    if (!target || !accounts[target]) {
+      ownerMsg.textContent = "Invalid target user.";
       return;
     }
-    if (!fileInput.files.length) {
-      setUploadMsg('⚠️ Please select a file.');
+    if (!amt || amt <= 0) {
+      ownerMsg.textContent = "Enter valid amount.";
+      return;
+    }
+    accounts[target].money += amt;
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+    ownerMsg.textContent = `Gave $${amt} to ${target}.`;
+    updateAccountList();
+  };
+  setBtn.onclick = () => {
+    if (!isOwner(currentUser)) return;
+    const target = targetUserInput.value.trim();
+    const amt = parseInt(amountInput.value);
+    if (!target || !accounts[target]) {
+      ownerMsg.textContent = "Invalid target user.";
+      return;
+    }
+    if (!amt || amt < 0) {
+      ownerMsg.textContent = "Enter valid amount.";
+      return;
+    }
+    accounts[target].money = amt;
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+    ownerMsg.textContent = `Set ${target}'s money to $${amt}.`;
+    updateAccountList();
+  };
+  banBtn.onclick = () => {
+    if (!isOwner(currentUser)) return;
+    const target = targetUserInput.value.trim();
+    if (!target || !accounts[target]) {
+      ownerMsg.textContent = "Invalid target user.";
+      return;
+    }
+    accounts[target].banned = true;
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+    ownerMsg.textContent = `${target} has been banned.`;
+    updateAccountList();
+  };
+  unbanBtn.onclick = () => {
+    if (!isOwner(currentUser)) return;
+    const target = targetUserInput.value.trim();
+    if (!target || !accounts[target]) {
+      ownerMsg.textContent = "Invalid target user.";
+      return;
+    }
+    accounts[target].banned = false;
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+    ownerMsg.textContent = `${target} has been unbanned.`;
+    updateAccountList();
+  };
+  givePremiumBtn.onclick = () => {
+    if (!isOwner(currentUser)) return;
+    const target = targetUserInput.value.trim();
+    if (!target || !accounts[target]) {
+      ownerMsg.textContent = "Invalid target user.";
+      return;
+    }
+    accounts[target].premium = true;
+    localStorage.setItem('accounts', JSON.stringify(accounts));
+    ownerMsg.textContent = `${target} has been given premium.`;
+    updateAccountList();
+  };
+
+  // -------- UPLOAD FILES --------
+  function uploadFile() {
+    if (!currentUser) {
+      uploadMsg.textContent = "Please log in to upload files.";
+      return;
+    }
+    if (fileInput.files.length === 0) {
+      uploadMsg.textContent = "Select a file to upload.";
       return;
     }
     const file = fileInput.files[0];
-    const files = userFiles[currentUser] || [];
-    const premium = isPremium(currentUser);
-
-    if (!premium && files.length >= MAX_NORMAL_FILES) {
-      setUploadMsg(`⚠️ Normal users can upload max ${MAX_NORMAL_FILES} file(s).`);
-      return;
+    const maxSizeMB = MAX_NORMAL_FILE_SIZE_MB;
+    // Check limits for normal user
+    if (!isOwner(currentUser)) {
+      const userUploadedFiles = (userFiles[currentUser] || []);
+      if (userUploadedFiles.length >= MAX_NORMAL_FILES) {
+        uploadMsg.textContent = `Normal users can only upload ${MAX_NORMAL_FILES} file(s).`;
+        return;
+      }
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        uploadMsg.textContent = `File too large. Max ${maxSizeMB}MB allowed for normal users.`;
+        return;
+      }
     }
-    if (!premium && file.size > MAX_NORMAL_FILE_SIZE) {
-      setUploadMsg('⚠️ Max file size for normal users is 1 GB.');
-      return;
-    }
-    if (premium && files.length >= MAX_PREMIUM_FILES) {
-      setUploadMsg('⚠️ You have reached your max upload files limit.');
-      return;
-    }
-
-    const now = Date.now();
-    const expiry = premium ? null : now + 30*24*60*60*1000; // 30 days expiry normal users
-
-    const newFile = {
-      name: file.name,
-      size: file.size,
-      uploadDate: now,
-      expiryDate: expiry,
-      published: false,
-      viewers: [],
-      uploader: currentUser
+    // Read file as base64 for storage (small files only)
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      let base64Data = e.target.result;
+      // Save file object with metadata and content
+      const fileObj = {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        uploadedAt: Date.now(),
+        content: base64Data,
+        views: 0,
+        viewers: {}, // visitorId: timestamp
+      };
+      if (!userFiles[currentUser]) userFiles[currentUser] = [];
+      userFiles[currentUser].push(fileObj);
+      localStorage.setItem('userFiles', JSON.stringify(userFiles));
+      uploadMsg.textContent = `Uploaded "${file.name}" successfully!`;
+      fileInput.value = "";
+      updateUploadFilesList();
     };
-
-    files.push(newFile);
-    userFiles[currentUser] = files;
-    saveUserFiles();
-    fileInput.value = "";
-    setUploadMsg(`Uploaded "${file.name}" successfully.`);
-    refreshUploadFileList();
+    reader.onerror = function() {
+      uploadMsg.textContent = "Error reading file.";
+    };
+    reader.readAsDataURL(file);
   }
 
-  function refreshUploadFileList() {
-    const files = userFiles[currentUser] || [];
-    if (files.length === 0) {
-      uploadFilesList.innerHTML = "No files uploaded.";
+  function updateUploadFilesList() {
+    uploadFilesList.innerHTML = '';
+    if (!userFiles[currentUser] || userFiles[currentUser].length === 0) {
+      uploadFilesList.textContent = 'No files uploaded.';
       return;
     }
-    uploadFilesList.innerHTML = "";
-    files.forEach((file, index) => {
-      const div = document.createElement("div");
+    userFiles[currentUser].forEach((fileObj, index) => {
+      const div = document.createElement('div');
 
-      const nameSpan = document.createElement("span");
-      nameSpan.textContent = `${file.name} (${formatMB(file.size)})${file.published ? " [Published]" : ""} - Views: ${file.viewers.length}`;
-      div.appendChild(nameSpan);
+      const fileInfo = document.createElement('span');
+      fileInfo.textContent = `${fileObj.name} (${(fileObj.size/1024).toFixed(1)} KB) - Views: ${fileObj.views}`;
+      div.appendChild(fileInfo);
 
-      const uploaderMsg = document.createElement("div");
-      uploaderMsg.className = "uploaderInfo";
-      uploaderMsg.textContent = `Uploaded by: ${file.uploader}`;
-      div.appendChild(uploaderMsg);
-
-      const downloadBtn = document.createElement("button");
-      downloadBtn.textContent = "Download";
-      downloadBtn.onclick = () => {
-        alert(`Pretend downloading: ${file.name}`);
-        if (file.published) {
-          if (!file.viewers.includes(visitorId)) {
-            file.viewers.push(visitorId);
-            saveUserFiles();
-            refreshUploadFileList();
-          }
-        }
-      };
-      div.appendChild(downloadBtn);
-
-      const publishBtn = document.createElement("button");
-      publishBtn.textContent = file.published ? "Unpublish" : "Publish";
-      publishBtn.className = "publishBtn";
+      const publishBtn = document.createElement('button');
+      publishBtn.textContent = "Publish";
+      publishBtn.className = 'publishBtn';
       publishBtn.onclick = () => {
-        file.published = !file.published;
-        if (!file.published) file.viewers = [];
-        saveUserFiles();
-        refreshUploadFileList();
+        alert(`Publishing file "${fileObj.name}". (You can implement real publishing here)`);
       };
       div.appendChild(publishBtn);
 
-      const deleteBtn = document.createElement("button");
+      const deleteBtn = document.createElement('button');
       deleteBtn.textContent = "Delete";
-      deleteBtn.className = "deleteBtn";
+      deleteBtn.className = 'deleteBtn';
       deleteBtn.onclick = () => {
-        if (confirm(`Delete file "${file.name}"?`)) {
-          files.splice(index, 1);
-          userFiles[currentUser] = files;
-          saveUserFiles();
-          refreshUploadFileList();
+        if (confirm(`Delete file "${fileObj.name}"?`)) {
+          userFiles[currentUser].splice(index, 1);
+          localStorage.setItem('userFiles', JSON.stringify(userFiles));
+          updateUploadFilesList();
+          uploadMsg.textContent = `Deleted "${fileObj.name}".`;
         }
       };
       div.appendChild(deleteBtn);
@@ -827,28 +885,19 @@
     });
   }
 
-  // -------- ONLOAD --------
+  // -------- ON LOAD --------
   window.onload = () => {
-    currentUser = localStorage.getItem("currentUser");
+    currentUser = localStorage.getItem('currentUser');
     if (currentUser && accounts[currentUser] && !accounts[currentUser].banned) {
-      loginPanel.classList.remove('show');
-      createPanel.classList.remove('show');
-      profileToggleBtn.classList.add('show');
-      uploadPanel.style.display = 'block';
-      ownerToggleBtn.style.display = (currentUser === 'manyu') ? 'block' : 'none';
-      updateMoneyDisplay();
-      updateProfilePanel();
-      refreshUploadFileList();
+      showMainUI();
+      if (uploadPanel.style.display !== 'none') {
+        updateUploadFilesList();
+      }
     } else {
-      currentUser = null;
-      showLogin();
-      updateMoneyDisplay();
-      uploadPanel.style.display = 'none';
-      ownerToggleBtn.style.display = 'none';
-      profileToggleBtn.classList.remove('show');
+      logout();
     }
-    refreshAccountList();
   };
 </script>
+
 </body>
 </html>
