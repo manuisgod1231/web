@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>iOS16 Style Login & Owner Panel</title>
+<title>Upload File By Manyu</title>
 <style>
   /* Reset & base */
   * {
@@ -174,6 +174,19 @@
     pointer-events: auto;
     transform: translateY(0);
   }
+  #profilePanel img.profile-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 12px;
+    display: block;
+  }
+  #profilePanel .profile-nickname {
+    font-style: italic;
+    color: #666;
+    margin-bottom: 12px;
+  }
   #profilePanel button {
     width: 100%;
     margin-top: 20px;
@@ -184,6 +197,42 @@
     box-shadow:
       0 8px 20px rgba(255,59,48,0.35);
     color: white;
+  }
+  #settingsSection {
+    margin-top: 24px;
+    border-top: 1px solid #ddd;
+    padding-top: 16px;
+  }
+  #settingsSection h4 {
+    margin-bottom: 12px;
+  }
+  #settingsSection input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    box-sizing: border-box;
+    margin-bottom: 8px;
+  }
+  #settingsSection button {
+    background: #007aff;
+    font-weight: 700;
+    border-radius: 24px;
+    padding: 12px 0;
+    box-shadow: 0 8px 20px rgba(0,122,255,0.35);
+    color: white;
+    cursor: pointer;
+    width: 100%;
+  }
+  #settingsSection button:hover {
+    background: #005ecb;
+  }
+  #settingsMsg {
+    margin-top: 8px;
+    font-style: italic;
+    min-height: 20px;
+    color: #ff3b30;
   }
   #ownerPanel {
     position: fixed;
@@ -253,6 +302,12 @@
   #ownerActions button.ban:hover {
     background: #c62828;
   }
+  #ownerActions button.unban {
+    background: #28a745;
+  }
+  #ownerActions button.unban:hover {
+    background: #1e7e34;
+  }
   #ownerMsg {
     color: #007aff;
     margin-top: 10px;
@@ -291,9 +346,26 @@
 <!-- Profile Panel -->
 <div id="profilePanel">
   <h3>Profile</h3>
+  <img id="profileLogoImg" class="profile-logo" src="" alt="Profile Logo" style="display:none" />
   <p><strong>Username:</strong> <span id="profileUsername"></span></p>
+  <p class="profile-nickname" id="profileNickname"></p>
+  <p id="premiumStatus"></p>
+
+  <div id="settingsSection">
+    <h4>Settings</h4>
+    <input id="nicknameInput" placeholder="Nickname (optional)" />
+    <input id="profileLogoInput" placeholder="Profile Logo URL (optional)" />
+    <button onclick="saveProfileSettings()">Save Settings</button>
+    <p id="settingsMsg"></p>
+  </div>
+
   <button onclick="logout()">Logout</button>
   <button id="ownerToggleBtn" style="display:none;">Toggle Owner Panel</button>
+  <h4>Buy Premium</h4>
+  <button onclick="purchasePremium(7)">Buy 1 Week ($10)</button>
+  <button onclick="purchasePremium(30)">Buy 1 Month ($30)</button>
+  <button onclick="purchasePremium(365)">Buy 1 Year ($300)</button>
+  <button onclick="purchasePremium('lifetime')">Buy Lifetime ($999)</button>
 </div>
 
 <!-- Owner Panel -->
@@ -307,6 +379,7 @@
     <button id="giveBtn">Give Money</button>
     <button id="setBtn">Set Money</button>
     <button id="banBtn" class="ban">Ban User</button>
+    <button id="unbanBtn" class="unban">Unban User</button>
     <p id="ownerMsg"></p>
   </div>
 </div>
@@ -343,6 +416,7 @@
     document.getElementById("loginMsg").textContent = "";
     document.getElementById("createMsg").textContent = "";
     updateOwnerMsg("");
+    document.getElementById("settingsMsg").textContent = "";
   }
 
   function login() {
@@ -448,8 +522,62 @@
 
   function updateProfilePanel() {
     document.getElementById("profileUsername").textContent = currentUser || "";
+    if (!currentUser) return;
+
+    const userData = accounts[currentUser];
+
+    // Premium status display
+    const premiumStatusEl = document.getElementById("premiumStatus");
+    if (userData.premium) {
+      const now = Date.now();
+      if (userData.premium === "lifetime") {
+        premiumStatusEl.textContent = "🔥 Premium: Lifetime";
+      } else if (userData.premium > now) {
+        const daysLeft = Math.ceil((userData.premium - now) / (1000 * 60 * 60 * 24));
+        premiumStatusEl.textContent = `🔥 Premium active, ${daysLeft} day(s) left`;
+      } else {
+        premiumStatusEl.textContent = "⚠️ Premium expired";
+      }
+    } else {
+      premiumStatusEl.textContent = "⚠️ No Premium";
+    }
+
+    // Nickname and profile logo
+    document.getElementById("nicknameInput").value = userData.nickname || "";
+    const logoInput = document.getElementById("profileLogoInput");
+    logoInput.value = userData.profileLogo || "";
+
+    const logoImg = document.getElementById("profileLogoImg");
+    if (userData.profileLogo) {
+      logoImg.src = userData.profileLogo;
+      logoImg.style.display = "block";
+    } else {
+      logoImg.style.display = "none";
+      logoImg.src = "";
+    }
+
+    document.getElementById("profileNickname").textContent = userData.nickname || "";
+
     // Show owner panel toggle only for owner 'manyu'
     document.getElementById("ownerToggleBtn").style.display = (currentUser === "manyu") ? "block" : "none";
+  }
+
+  // Save profile settings (nickname and logo)
+  function saveProfileSettings() {
+    if (!currentUser) return;
+    const nick = document.getElementById("nicknameInput").value.trim();
+    const logo = document.getElementById("profileLogoInput").value.trim();
+
+    if (!accounts[currentUser]) return;
+
+    accounts[currentUser].nickname = nick || null;
+    accounts[currentUser].profileLogo = logo || null;
+    saveAccounts();
+    updateProfilePanel();
+    document.getElementById("settingsMsg").textContent = "Settings saved!";
+    setTimeout(() => {
+      document.getElementById("settingsMsg").textContent = "";
+    }, 3000);
   }
 
   // Owner panel toggle
@@ -485,6 +613,7 @@
   const giveBtn = document.getElementById("giveBtn");
   const setBtn = document.getElementById("setBtn");
   const banBtn = document.getElementById("banBtn");
+  const unbanBtn = document.getElementById("unbanBtn");
   const targetUserInput = document.getElementById("targetUser");
   const amountInput = document.getElementById("amount");
   const ownerMsg = document.getElementById("ownerMsg");
@@ -550,6 +679,64 @@
     updateOwnerMsg(`⚠️ แบนผู้ใช้ ${target} เรียบร้อย`);
     if (currentUser === target) logout();
   };
+
+  unbanBtn.onclick = () => {
+    const target = targetUserInput.value.trim();
+    if (!target) {
+      updateOwnerMsg("⚠️ โปรดกรอกชื่อผู้ใช้", true);
+      return;
+    }
+    if (!accounts[target]) {
+      updateOwnerMsg("❌ ชื่อผู้ใช้ไม่ถูกต้อง", true);
+      return;
+    }
+    if (!accounts[target].banned) {
+      updateOwnerMsg(`ℹ️ ผู้ใช้ ${target} ไม่ได้ถูกแบน`, true);
+      return;
+    }
+    accounts[target].banned = false;
+    saveAccounts();
+    updateOwnerPanel();
+    updateOwnerMsg(`✅ ยกเลิกแบนผู้ใช้ ${target} เรียบร้อย`);
+  };
+
+  // Premium purchase function
+  function purchasePremium(days) {
+    if (!currentUser) return alert("Please login first.");
+    const priceMap = {
+      7: 10,
+      30: 30,
+      365: 300,
+      lifetime: 999
+    };
+    const price = priceMap[days];
+    if (!price) return alert("Invalid purchase option.");
+
+    if (accounts[currentUser].money < price) {
+      alert("Not enough money to purchase premium.");
+      return;
+    }
+
+    accounts[currentUser].money -= price;
+
+    if (days === "lifetime") {
+      accounts[currentUser].premium = "lifetime";
+    } else {
+      const now = Date.now();
+      let currentPremium = accounts[currentUser].premium;
+      if (currentPremium === "lifetime" || (currentPremium && currentPremium > now)) {
+        // extend premium time
+        accounts[currentUser].premium = (currentPremium === "lifetime" ? now : currentPremium) + days * 24 * 60 * 60 * 1000;
+      } else {
+        accounts[currentUser].premium = now + days * 24 * 60 * 60 * 1000;
+      }
+    }
+
+    saveAccounts();
+    updateMoneyDisplay();
+    updateProfilePanel();
+    alert(`Purchased premium for ${days === "lifetime" ? "lifetime" : days + " day(s)"}!`);
+  }
 
   window.onload = () => {
     loadCurrentUser();
