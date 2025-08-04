@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Upload File By Manyu</title>
+<title>Upload File by manyu</title>
 <style>
   /* Reset & base */
   * {
@@ -150,11 +150,14 @@
   #profileToggleBtn:active {
     transform: scale(0.9);
   }
+  /* Updated profile panel with scrolling */
   #profilePanel {
     position: fixed;
     bottom: 100px;
     right: 24px;
     width: 320px;
+    max-height: 400px;          /* max height with scroll */
+    overflow-y: auto;           /* vertical scrolling */
     background: #fff;
     border-radius: 32px;
     box-shadow:
@@ -168,6 +171,7 @@
     pointer-events: none;
     transform: translateY(20px);
     transition: opacity 0.4s ease, transform 0.4s ease;
+    -webkit-overflow-scrolling: touch; /* smooth scroll iOS */
   }
   #profilePanel.show {
     opacity: 1;
@@ -186,17 +190,6 @@
     font-style: italic;
     color: #666;
     margin-bottom: 12px;
-  }
-  #profilePanel button {
-    width: 100%;
-    margin-top: 20px;
-    background: #ff3b30;
-    font-weight: 700;
-    border-radius: 24px;
-    padding: 16px 0;
-    box-shadow:
-      0 8px 20px rgba(255,59,48,0.35);
-    color: white;
   }
   #settingsSection {
     margin-top: 24px;
@@ -234,6 +227,8 @@
     min-height: 20px;
     color: #ff3b30;
   }
+
+  /* Owner Panel */
   #ownerPanel {
     position: fixed;
     bottom: 140px;
@@ -416,7 +411,6 @@
     document.getElementById("loginMsg").textContent = "";
     document.getElementById("createMsg").textContent = "";
     updateOwnerMsg("");
-    document.getElementById("settingsMsg").textContent = "";
   }
 
   function login() {
@@ -522,226 +516,206 @@
 
   function updateProfilePanel() {
     document.getElementById("profileUsername").textContent = currentUser || "";
-    if (!currentUser) return;
+    const acc = accounts[currentUser];
+    if (!acc) return;
 
-    const userData = accounts[currentUser];
+    // Show nickname
+    document.getElementById("profileNickname").textContent = acc.nickname ? `Nickname: ${acc.nickname}` : "";
 
-    // Premium status display
-    const premiumStatusEl = document.getElementById("premiumStatus");
-    if (userData.premium) {
-      const now = Date.now();
-      if (userData.premium === "lifetime") {
-        premiumStatusEl.textContent = "🔥 Premium: Lifetime";
-      } else if (userData.premium > now) {
-        const daysLeft = Math.ceil((userData.premium - now) / (1000 * 60 * 60 * 24));
-        premiumStatusEl.textContent = `🔥 Premium active, ${daysLeft} day(s) left`;
+    // Show premium status
+    if (acc.premiumUntil) {
+      let premiumText = "Premium: ";
+      if (acc.premiumUntil === "lifetime") {
+        premiumText += "Lifetime";
       } else {
-        premiumStatusEl.textContent = "⚠️ Premium expired";
+        const now = Date.now();
+        if (now > acc.premiumUntil) {
+          premiumText += "Expired";
+        } else {
+          const diff = acc.premiumUntil - now;
+          const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+          premiumText += `${days} day(s) left`;
+        }
       }
+      document.getElementById("premiumStatus").textContent = premiumText;
     } else {
-      premiumStatusEl.textContent = "⚠️ No Premium";
+      document.getElementById("premiumStatus").textContent = "No Premium";
     }
 
-    // Nickname and profile logo
-    document.getElementById("nicknameInput").value = userData.nickname || "";
-    const logoInput = document.getElementById("profileLogoInput");
-    logoInput.value = userData.profileLogo || "";
-
+    // Profile logo
+    const logoUrl = acc.profileLogo;
     const logoImg = document.getElementById("profileLogoImg");
-    if (userData.profileLogo) {
-      logoImg.src = userData.profileLogo;
+    if (logoUrl) {
+      logoImg.src = logoUrl;
       logoImg.style.display = "block";
     } else {
       logoImg.style.display = "none";
-      logoImg.src = "";
     }
 
-    document.getElementById("profileNickname").textContent = userData.nickname || "";
-
-    // Show owner panel toggle only for owner 'manyu'
-    document.getElementById("ownerToggleBtn").style.display = (currentUser === "manyu") ? "block" : "none";
+    // Show owner toggle if owner
+    const ownerToggleBtn = document.getElementById("ownerToggleBtn");
+    if (currentUser === "manyu") {
+      ownerToggleBtn.style.display = "block";
+    } else {
+      ownerToggleBtn.style.display = "none";
+      hideOwnerPanel();
+    }
   }
 
-  // Save profile settings (nickname and logo)
   function saveProfileSettings() {
     if (!currentUser) return;
-    const nick = document.getElementById("nicknameInput").value.trim();
-    const logo = document.getElementById("profileLogoInput").value.trim();
-
+    const nickname = document.getElementById("nicknameInput").value.trim();
+    const logoUrl = document.getElementById("profileLogoInput").value.trim();
     if (!accounts[currentUser]) return;
 
-    accounts[currentUser].nickname = nick || null;
-    accounts[currentUser].profileLogo = logo || null;
+    accounts[currentUser].nickname = nickname || "";
+    accounts[currentUser].profileLogo = logoUrl || "";
     saveAccounts();
     updateProfilePanel();
-    document.getElementById("settingsMsg").textContent = "Settings saved!";
-    setTimeout(() => {
-      document.getElementById("settingsMsg").textContent = "";
-    }, 3000);
+
+    const msg = document.getElementById("settingsMsg");
+    msg.textContent = "Settings saved.";
+    setTimeout(() => { msg.textContent = ""; }, 3000);
   }
 
-  // Owner panel toggle
+  // Purchase Premium
+  function purchasePremium(days) {
+    if (!currentUser) return alert("Please login.");
+
+    let acc = accounts[currentUser];
+    const now = Date.now();
+    let currentExpiry = acc.premiumUntil && acc.premiumUntil !== "lifetime" ? acc.premiumUntil : now;
+
+    if (days === "lifetime") {
+      acc.premiumUntil = "lifetime";
+    } else {
+      if (!acc.premiumUntil || acc.premiumUntil === "lifetime" || acc.premiumUntil < now) {
+        acc.premiumUntil = now + days * 24 * 60 * 60 * 1000;
+      } else {
+        acc.premiumUntil = currentExpiry + days * 24 * 60 * 60 * 1000;
+      }
+    }
+    saveAccounts();
+    updateProfilePanel();
+    alert(`Thank you for purchasing premium for ${days === "lifetime" ? "lifetime" : days + " days"}!`);
+  }
+
+  // Owner Panel toggle & logic
   const ownerToggleBtn = document.getElementById("ownerToggleBtn");
   const ownerPanel = document.getElementById("ownerPanel");
-  let ownerVisible = false;
+  const accountListDiv = document.getElementById("accountList");
+  const ownerMsg = document.getElementById("ownerMsg");
 
   ownerToggleBtn.addEventListener("click", () => {
-    ownerVisible = !ownerVisible;
-    if (ownerVisible) {
+    if (ownerPanel.classList.contains("show")) {
+      ownerPanel.classList.remove("show");
+    } else {
       updateOwnerPanel();
       ownerPanel.classList.add("show");
-    } else {
-      ownerPanel.classList.remove("show");
     }
   });
 
-  function hideOwnerPanel() {
-    ownerVisible = false;
-    ownerPanel.classList.remove("show");
-  }
-
   function updateOwnerPanel() {
-    const listDiv = document.getElementById("accountList");
-    listDiv.innerHTML = "";
+    // List all accounts usernames
+    accountListDiv.innerHTML = "";
     for (const user in accounts) {
-      const bannedTag = accounts[user].banned ? " (BANNED)" : "";
-      listDiv.innerHTML += `<div>${user}: $${accounts[user].money}${bannedTag}</div>`;
+      const span = document.createElement("span");
+      span.textContent = user + (accounts[user].banned ? " (banned)" : "");
+      span.style.display = "block";
+      accountListDiv.appendChild(span);
     }
+    clearOwnerInputs();
+    updateOwnerMsg("");
   }
 
-  // Owner actions
-  const giveBtn = document.getElementById("giveBtn");
-  const setBtn = document.getElementById("setBtn");
-  const banBtn = document.getElementById("banBtn");
-  const unbanBtn = document.getElementById("unbanBtn");
-  const targetUserInput = document.getElementById("targetUser");
-  const amountInput = document.getElementById("amount");
-  const ownerMsg = document.getElementById("ownerMsg");
-
-  function updateOwnerMsg(text, error = false) {
-    ownerMsg.textContent = text;
-    ownerMsg.style.color = error ? "#ff3b30" : "#007aff";
+  function clearOwnerInputs() {
+    document.getElementById("targetUser").value = "";
+    document.getElementById("amount").value = "";
   }
 
-  giveBtn.onclick = () => {
-    const target = targetUserInput.value.trim();
-    const amount = parseInt(amountInput.value);
-    if (!target || isNaN(amount) || amount <= 0) {
-      updateOwnerMsg("⚠️ โปรดกรอกชื่อและจำนวนเงินที่ถูกต้อง", true);
+  function updateOwnerMsg(text) {
+    ownerMsg.textContent = text || "";
+  }
+
+  document.getElementById("giveBtn").addEventListener("click", () => {
+    const target = document.getElementById("targetUser").value.trim();
+    const amount = parseInt(document.getElementById("amount").value, 10);
+    if (!target || isNaN(amount)) {
+      updateOwnerMsg("⚠️ Enter target user and valid amount.");
       return;
     }
     if (!accounts[target]) {
-      updateOwnerMsg("❌ ชื่อผู้ใช้ไม่ถูกต้อง", true);
+      updateOwnerMsg("❌ User not found.");
       return;
     }
-    accounts[target].money += amount;
+    accounts[target].money = (accounts[target].money || 0) + amount;
     saveAccounts();
-    updateOwnerPanel();
-    updateOwnerMsg(`🎉 เพิ่มเงินให้ ${target} จำนวน $${amount} สำเร็จ`);
+    updateOwnerMsg(`✅ Gave $${amount} to ${target}.`);
     if (target === currentUser) updateMoneyDisplay();
-  };
+    clearOwnerInputs();
+  });
 
-  setBtn.onclick = () => {
-    const target = targetUserInput.value.trim();
-    const amount = parseInt(amountInput.value);
-    if (!target || isNaN(amount) || amount < 0) {
-      updateOwnerMsg("⚠️ โปรดกรอกชื่อและจำนวนเงินที่ถูกต้อง", true);
+  document.getElementById("setBtn").addEventListener("click", () => {
+    const target = document.getElementById("targetUser").value.trim();
+    const amount = parseInt(document.getElementById("amount").value, 10);
+    if (!target || isNaN(amount)) {
+      updateOwnerMsg("⚠️ Enter target user and valid amount.");
       return;
     }
     if (!accounts[target]) {
-      updateOwnerMsg("❌ ชื่อผู้ใช้ไม่ถูกต้อง", true);
+      updateOwnerMsg("❌ User not found.");
       return;
     }
     accounts[target].money = amount;
     saveAccounts();
-    updateOwnerPanel();
-    updateOwnerMsg(`🎉 ตั้งเงินของ ${target} เป็น $${amount} เรียบร้อย`);
+    updateOwnerMsg(`✅ Set ${target}'s money to $${amount}.`);
     if (target === currentUser) updateMoneyDisplay();
-  };
+    clearOwnerInputs();
+  });
 
-  banBtn.onclick = () => {
-    const target = targetUserInput.value.trim();
+  document.getElementById("banBtn").addEventListener("click", () => {
+    const target = document.getElementById("targetUser").value.trim();
     if (!target) {
-      updateOwnerMsg("⚠️ โปรดกรอกชื่อผู้ใช้", true);
+      updateOwnerMsg("⚠️ Enter target user.");
       return;
     }
     if (!accounts[target]) {
-      updateOwnerMsg("❌ ชื่อผู้ใช้ไม่ถูกต้อง", true);
-      return;
-    }
-    if (target === "manyu") {
-      updateOwnerMsg("❌ ไม่สามารถแบนเจ้าของระบบได้", true);
+      updateOwnerMsg("❌ User not found.");
       return;
     }
     accounts[target].banned = true;
     saveAccounts();
+    updateOwnerMsg(`⛔ Banned user ${target}.`);
     updateOwnerPanel();
-    updateOwnerMsg(`⚠️ แบนผู้ใช้ ${target} เรียบร้อย`);
-    if (currentUser === target) logout();
-  };
+    if (target === currentUser) logout();
+    clearOwnerInputs();
+  });
 
-  unbanBtn.onclick = () => {
-    const target = targetUserInput.value.trim();
+  document.getElementById("unbanBtn").addEventListener("click", () => {
+    const target = document.getElementById("targetUser").value.trim();
     if (!target) {
-      updateOwnerMsg("⚠️ โปรดกรอกชื่อผู้ใช้", true);
+      updateOwnerMsg("⚠️ Enter target user.");
       return;
     }
     if (!accounts[target]) {
-      updateOwnerMsg("❌ ชื่อผู้ใช้ไม่ถูกต้อง", true);
+      updateOwnerMsg("❌ User not found.");
       return;
     }
     if (!accounts[target].banned) {
-      updateOwnerMsg(`ℹ️ ผู้ใช้ ${target} ไม่ได้ถูกแบน`, true);
+      updateOwnerMsg(`ℹ️ User ${target} is not banned.`);
       return;
     }
-    accounts[target].banned = false;
+    delete accounts[target].banned;
     saveAccounts();
+    updateOwnerMsg(`✅ Unbanned user ${target}.`);
     updateOwnerPanel();
-    updateOwnerMsg(`✅ ยกเลิกแบนผู้ใช้ ${target} เรียบร้อย`);
-  };
+    clearOwnerInputs();
+  });
 
-  // Premium purchase function
-  function purchasePremium(days) {
-    if (!currentUser) return alert("Please login first.");
-    const priceMap = {
-      7: 10,
-      30: 30,
-      365: 300,
-      lifetime: 999
-    };
-    const price = priceMap[days];
-    if (!price) return alert("Invalid purchase option.");
-
-    if (accounts[currentUser].money < price) {
-      alert("Not enough money to purchase premium.");
-      return;
-    }
-
-    accounts[currentUser].money -= price;
-
-    if (days === "lifetime") {
-      accounts[currentUser].premium = "lifetime";
-    } else {
-      const now = Date.now();
-      let currentPremium = accounts[currentUser].premium;
-      if (currentPremium === "lifetime" || (currentPremium && currentPremium > now)) {
-        // extend premium time
-        accounts[currentUser].premium = (currentPremium === "lifetime" ? now : currentPremium) + days * 24 * 60 * 60 * 1000;
-      } else {
-        accounts[currentUser].premium = now + days * 24 * 60 * 60 * 1000;
-      }
-    }
-
-    saveAccounts();
-    updateMoneyDisplay();
-    updateProfilePanel();
-    alert(`Purchased premium for ${days === "lifetime" ? "lifetime" : days + " day(s)"}!`);
-  }
-
-  window.onload = () => {
+  // Load existing session on page load
+  window.addEventListener("load", () => {
     loadCurrentUser();
-  };
+  });
 </script>
-
 </body>
 </html>
