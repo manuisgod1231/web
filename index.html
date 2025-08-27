@@ -16,83 +16,93 @@
 <div class="card">
   <h2>Roblox Group Join Checker</h2>
   <select id="historySelect"></select><br>
-  <input type="text" id="userId" placeholder="Enter User ID"><br>
+  <input type="text" id="usernameOrId" placeholder="Enter Username or User ID"><br>
   <input type="text" id="groupId" placeholder="Enter Group ID"><br>
   <button onclick="checkGroup()">Check</button>
   <div id="result"></div>
 </div>
 
 <script>
-const proxy = "https://cors-anywhere.herokuapp.com/";
+const proxy = "https://api.allorigins.win/get?url="; // CORS proxy
 const historyKey = "rbxGroupCheckerHistory";
 
-// Load history from localStorage
+// Load saved history
 function loadHistory() {
   const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
   const select = document.getElementById("historySelect");
   select.innerHTML = "<option value=''>-- Recent --</option>";
-  history.forEach((item, index) => {
+  history.forEach((item,index)=>{
     const opt = document.createElement("option");
     opt.value = index;
-    opt.text = `UserID: ${item.userId} | GroupID: ${item.groupId}`;
+    opt.text = `User: ${item.usernameOrId} | Group: ${item.groupId}`;
     select.appendChild(opt);
   });
 }
 
-function saveHistory(userId, groupId) {
+// Save new history
+function saveHistory(usernameOrId, groupId){
   let history = JSON.parse(localStorage.getItem(historyKey) || "[]");
-  // Remove duplicate
-  history = history.filter(h => !(h.userId===userId && h.groupId===groupId));
-  // Add new on top
-  history.unshift({userId, groupId});
-  // Keep only 5
-  if(history.length > 5) history = history.slice(0,5);
+  history = history.filter(h => !(h.usernameOrId===usernameOrId && h.groupId===groupId));
+  history.unshift({usernameOrId, groupId});
+  if(history.length>5) history = history.slice(0,5);
   localStorage.setItem(historyKey, JSON.stringify(history));
   loadHistory();
 }
 
-// Update input when selecting history
-document.getElementById("historySelect").onchange = function() {
+// Fill inputs when selecting history
+document.getElementById("historySelect").onchange = function(){
   const idx = this.value;
-  if(idx === "") return;
+  if(idx==="") return;
   const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
   const item = history[idx];
   if(item){
-    document.getElementById("userId").value = item.userId;
+    document.getElementById("usernameOrId").value = item.usernameOrId;
     document.getElementById("groupId").value = item.groupId;
   }
 }
 
 loadHistory();
 
-function checkGroup() {
-  const userId = document.getElementById('userId').value.trim();
+// Main check function
+function checkGroup(){
+  const input = document.getElementById('usernameOrId').value.trim();
   const groupId = document.getElementById('groupId').value.trim();
   const resultBox = document.getElementById('result');
-  if(!userId || !groupId) { resultBox.textContent = "⚠️ Please enter both User ID and Group ID."; return; }
 
-  resultBox.textContent = "⏳ Checking...";
+  if(!input || !groupId){ resultBox.textContent="⚠️ Enter Username/UserID and Group ID"; return; }
+  resultBox.textContent="⏳ Checking...";
 
-  fetch(`${proxy}https://groups.roblox.com/v2/users/${userId}/groups/roles`)
-    .then(r => r.json())
-    .then(data => {
-      if(!data.data) { resultBox.textContent = "❌ No group data found."; return; }
-      const group = data.data.find(g => g.group.id == groupId);
-      if(group){
-        if(!group.memberSince) { resultBox.textContent = "⚠️ No join date available."; return; }
-        const joinDate = new Date(group.memberSince);
-        const now = new Date();
-        const diffDays = Math.floor((now - joinDate)/(1000*60*60*24));
-        resultBox.innerHTML = `
-          ✅ Joined on: <b>${joinDate.toDateString()}</b><br>
-          📅 Days in group: <b>${diffDays}</b>
-        `;
-        saveHistory(userId, groupId);
-      } else {
-        resultBox.textContent = "❌ User is not in this group.";
-      }
-    })
-    .catch(err => { console.error(err); resultBox.textContent = "⚠️ Error fetching data."; });
+  let fetchUserId;
+  if(/^\d+$/.test(input)){ // numeric -> User ID
+    fetchUserId = Promise.resolve({id: input, name: input});
+  } else { // username -> fetch User ID
+    fetchUserId = fetch(`${proxy}${encodeURIComponent(`https://users.roblox.com/v1/usernames/users`)}?`) // POST through proxy
+      .then(r=>r.json())
+      .then(d=>{
+        let data = JSON.parse(d.contents).data;
+        if(!data || data.length===0) throw new Error("Username not found");
+        return {id:data[0].id, name:data[0].name};
+      });
+  }
+
+  fetchUserId.then(user=>{
+    fetch(`${proxy}${encodeURIComponent(`https://groups.roblox.com/v2/users/${user.id}/groups/roles`)}`)
+      .then(r=>r.json())
+      .then(d=>{
+        let data = JSON.parse(d.contents);
+        let group = data.data.find(g=>g.group.id == groupId);
+        if(group){
+          if(!group.memberSince){ resultBox.textContent="⚠️ No join date available"; return; }
+          const joinDate = new Date(group.memberSince);
+          const now = new Date();
+          const diffDays = Math.floor((now - joinDate)/(1000*60*60*24));
+          resultBox.innerHTML = `✅ ${user.name}<br>Joined: <b>${joinDate.toDateString()}</b><br>📅 Days in group: <b>${diffDays}</b>`;
+          saveHistory(input, groupId);
+        } else { resultBox.textContent=`❌ ${user.name} is not in this group`; }
+      })
+      .catch(err=>{console.error(err); resultBox.textContent="⚠️ Error fetching group data"; });
+  })
+  .catch(err=>{ console.error(err); resultBox.textContent="⚠️ Username not found"; });
 }
 </script>
 </body>
