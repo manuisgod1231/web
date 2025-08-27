@@ -4,49 +4,18 @@
 <meta charset="UTF-8">
 <title>Roblox Group Join Checker</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-  .card {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    width: 350px;
-    text-align: center;
-  }
-  input {
-    width: 90%;
-    padding: 10px;
-    margin: 8px 0;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-  }
-  button {
-    background: #0f6fef;
-    color: white;
-    border: none;
-    padding: 10px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
+  body { font-family: Arial; background: #f5f5f5; display: flex; justify-content: center; align-items: center; height: 100vh; }
+  .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 400px; text-align: center; }
+  input, select { width: 90%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; }
+  button { background: #0f6fef; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; margin-top: 10px; }
   button:hover { background: #0954b8; }
-  #result {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #333;
-  }
+  #result { margin-top: 15px; font-size: 14px; color: #333; }
 </style>
 </head>
 <body>
 <div class="card">
   <h2>Roblox Group Join Checker</h2>
+  <select id="historySelect"></select><br>
   <input type="text" id="userId" placeholder="Enter User ID"><br>
   <input type="text" id="groupId" placeholder="Enter Group ID"><br>
   <button onclick="checkGroup()">Check</button>
@@ -54,24 +23,62 @@
 </div>
 
 <script>
+const proxy = "https://cors-anywhere.herokuapp.com/";
+const historyKey = "rbxGroupCheckerHistory";
+
+// Load history from localStorage
+function loadHistory() {
+  const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
+  const select = document.getElementById("historySelect");
+  select.innerHTML = "<option value=''>-- Recent --</option>";
+  history.forEach((item, index) => {
+    const opt = document.createElement("option");
+    opt.value = index;
+    opt.text = `UserID: ${item.userId} | GroupID: ${item.groupId}`;
+    select.appendChild(opt);
+  });
+}
+
+function saveHistory(userId, groupId) {
+  let history = JSON.parse(localStorage.getItem(historyKey) || "[]");
+  // Remove duplicate
+  history = history.filter(h => !(h.userId===userId && h.groupId===groupId));
+  // Add new on top
+  history.unshift({userId, groupId});
+  // Keep only 5
+  if(history.length > 5) history = history.slice(0,5);
+  localStorage.setItem(historyKey, JSON.stringify(history));
+  loadHistory();
+}
+
+// Update input when selecting history
+document.getElementById("historySelect").onchange = function() {
+  const idx = this.value;
+  if(idx === "") return;
+  const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
+  const item = history[idx];
+  if(item){
+    document.getElementById("userId").value = item.userId;
+    document.getElementById("groupId").value = item.groupId;
+  }
+}
+
+loadHistory();
+
 function checkGroup() {
   const userId = document.getElementById('userId').value.trim();
   const groupId = document.getElementById('groupId').value.trim();
   const resultBox = document.getElementById('result');
-
-  if(!userId || !groupId) {
-    resultBox.textContent = "⚠️ Please enter both User ID and Group ID.";
-    return;
-  }
+  if(!userId || !groupId) { resultBox.textContent = "⚠️ Please enter both User ID and Group ID."; return; }
 
   resultBox.textContent = "⏳ Checking...";
 
-  fetch(`https://groups.roblox.com/v2/users/${userId}/groups/roles`)
+  fetch(`${proxy}https://groups.roblox.com/v2/users/${userId}/groups/roles`)
     .then(r => r.json())
     .then(data => {
       if(!data.data) { resultBox.textContent = "❌ No group data found."; return; }
       const group = data.data.find(g => g.group.id == groupId);
-      if(group) {
+      if(group){
         if(!group.memberSince) { resultBox.textContent = "⚠️ No join date available."; return; }
         const joinDate = new Date(group.memberSince);
         const now = new Date();
@@ -80,14 +87,12 @@ function checkGroup() {
           ✅ Joined on: <b>${joinDate.toDateString()}</b><br>
           📅 Days in group: <b>${diffDays}</b>
         `;
+        saveHistory(userId, groupId);
       } else {
         resultBox.textContent = "❌ User is not in this group.";
       }
     })
-    .catch(err => {
-      console.error(err);
-      resultBox.textContent = "⚠️ Error fetching data.";
-    });
+    .catch(err => { console.error(err); resultBox.textContent = "⚠️ Error fetching data."; });
 }
 </script>
 </body>
