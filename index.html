@@ -1,52 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-<meta charset="UTF-8">
-<title>Roblox Group Join Checker</title>
-<style>
-  body { font-family: Arial; background: #e3e3e3; display: flex; justify-content: center; align-items: center; height: 100vh; }
-  .card { background: #1e1e1e; color: #fff; padding: 20px; border-radius: 12px; width: 380px; text-align: center; box-shadow: 0 6px 15px rgba(0,0,0,0.3);}
-  input { width: 90%; padding: 10px; margin: 8px 0; border-radius: 6px; border: none; }
-  button { background: #0f6fef; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-  button:hover { background: #0954b8; }
-  #result { margin-top: 15px; font-size: 14px; color: #fff; word-wrap: break-word;}
-  h2 { margin-bottom: 10px; }
-</style>
+  <meta charset="UTF-8">
+  <title>เว็บคำนวณต้นทุน</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#007bff">
+  <link rel="icon" href="icon.png">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+      background: #f9fafb;
+    }
+    h1 { text-align: center; color: #333; }
+    input, button {
+      padding: 8px; margin: 5px;
+      border-radius: 6px; border: 1px solid #ccc;
+    }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    table, th, td { border: 1px solid #ddd; text-align: center; padding: 8px; }
+    th { background: #f0f0f0; }
+    .total { font-size: 1.2em; font-weight: bold; margin-top: 15px; text-align: right; }
+  </style>
 </head>
 <body>
-<div class="card">
-  <h2>Roblox Group Checker</h2>
-  <input type="text" id="userInput" placeholder="Enter Username or UserID"><br>
-  <input type="text" id="groupId" placeholder="Enter Group ID"><br>
-  <button onclick="checkGroup()">Check</button>
-  <div id="result"></div>
-</div>
+  <h1>เว็บคำนวณต้นทุน</h1>
 
-<script>
-async function checkGroup(){
-  const userInput = document.getElementById('userInput').value.trim();
-  const groupId = document.getElementById('groupId').value.trim();
-  const resultBox = document.getElementById('result');
-  if(!userInput || !groupId){ resultBox.textContent="⚠️ Please enter Username/UserID and GroupID"; return; }
+  <div>
+    <input id="name" placeholder="ชื่อวัตถุดิบ">
+    <input id="price" type="number" placeholder="ราคา/หน่วย">
+    <input id="qty" type="number" placeholder="จำนวน">
+    <button onclick="addItem()">เพิ่ม</button>
+  </div>
 
-  resultBox.textContent = "⏳ Checking...";
-  try{
-    const res = await fetch("/check", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({userInput, groupId})
-    });
-    const data = await res.json();
-    if(data.error){
-      resultBox.textContent = "❌ "+data.error;
-      return;
+  <table id="itemTable">
+    <thead>
+      <tr>
+        <th>วัตถุดิบ</th>
+        <th>ราคา/หน่วย</th>
+        <th>จำนวน</th>
+        <th>รวม</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="total" id="total">ต้นทุนรวม: 0 บาท</div>
+
+  <script>
+    let items = JSON.parse(localStorage.getItem("items") || "[]");
+
+    function addItem() {
+      const name = document.getElementById("name").value;
+      const price = parseFloat(document.getElementById("price").value);
+      const qty = parseFloat(document.getElementById("qty").value);
+
+      if (!name || isNaN(price) || isNaN(qty)) {
+        alert("กรอกข้อมูลให้ครบ");
+        return;
+      }
+
+      items.push({ name, price, qty });
+      localStorage.setItem("items", JSON.stringify(items));
+      renderTable();
+
+      document.getElementById("name").value = "";
+      document.getElementById("price").value = "";
+      document.getElementById("qty").value = "";
     }
-    resultBox.innerHTML = `✅ Username: <b>${data.username}</b><br>Joined: <b>${data.joinDate}</b><br>📅 Days in group: <b>${data.daysInGroup}</b>`;
-  } catch(e){
-    console.error(e);
-    resultBox.textContent="⚠️ Server error";
-  }
-}
-</script>
+
+    function renderTable() {
+      const tbody = document.querySelector("#itemTable tbody");
+      tbody.innerHTML = "";
+      let total = 0;
+
+      items.forEach(item => {
+        const row = document.createElement("tr");
+        const subtotal = item.price * item.qty;
+        total += subtotal;
+
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.price}</td>
+          <td>${item.qty}</td>
+          <td>${subtotal.toFixed(2)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("total").textContent = "ต้นทุนรวม: " + total.toFixed(2) + " บาท";
+    }
+
+    renderTable();
+
+    // สมัคร service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
 </body>
 </html>
