@@ -31,7 +31,7 @@
   <div>
     <input id="name" placeholder="ชื่อวัตถุดิบ">
     <input id="price" type="number" placeholder="ราคา/หน่วย">
-    <input id="qty" type="number" placeholder="จำนวน">
+    <input id="qty" type="text" placeholder="จำนวน เช่น 1 ขีด, 500 กรัม">
     <button onclick="addItem()">เพิ่ม</button>
     <button id="clearAll" onclick="clearAll()">ลบทั้งหมด</button>
   </div>
@@ -54,16 +54,24 @@
   <script>
     let items = JSON.parse(localStorage.getItem("items") || "[]");
 
+    // บันทึก LocalStorage
     function saveItems() {
       localStorage.setItem("items", JSON.stringify(items));
+    }
+
+    // แยกเลขออกจากหน่วย
+    function parseQuantity(qtyStr) {
+      const match = qtyStr.match(/([\d.]+)\s*(\S*)/);
+      if (!match) return { value: 0, unit: "" };
+      return { value: parseFloat(match[1]), unit: match[2] };
     }
 
     function addItem() {
       const name = document.getElementById("name").value;
       const price = parseFloat(document.getElementById("price").value);
-      const qty = parseFloat(document.getElementById("qty").value);
+      const qty = document.getElementById("qty").value;
 
-      if (!name || isNaN(price) || isNaN(qty)) {
+      if (!name || isNaN(price) || !qty) {
         alert("กรอกข้อมูลให้ครบ");
         return;
       }
@@ -87,9 +95,9 @@
       const item = items[index];
       const newName = prompt("แก้ไขชื่อวัตถุดิบ:", item.name);
       const newPrice = parseFloat(prompt("แก้ไขราคา/หน่วย:", item.price));
-      const newQty = parseFloat(prompt("แก้ไขจำนวน:", item.qty));
+      const newQty = prompt("แก้ไขจำนวน:", item.qty);
 
-      if (!newName || isNaN(newPrice) || isNaN(newQty)) {
+      if (!newName || isNaN(newPrice) || !newQty) {
         alert("ข้อมูลไม่ถูกต้อง");
         return;
       }
@@ -113,7 +121,8 @@
       let total = 0;
 
       items.forEach((item, index) => {
-        const subtotal = item.price * item.qty;
+        const qtyObj = parseQuantity(item.qty);
+        const subtotal = item.price * qtyObj.value;
         total += subtotal;
 
         const row = document.createElement("tr");
@@ -135,6 +144,7 @@
 
     renderTable();
 
+    // PWA Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
     }
