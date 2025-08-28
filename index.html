@@ -15,24 +15,13 @@
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     table, th, td { border: 1px solid #ddd; text-align: center; padding: 8px; }
     th { background: #f0f0f0; }
+    td[contenteditable="true"] { background: #fffbea; }
     .total { font-size: 1.2em; font-weight: bold; margin-top: 15px; text-align: right; }
     .delete-btn { background: #dc3545; padding: 4px 8px; border-radius: 4px; border: none; color: white; }
     .delete-btn:hover { background: #a71d2a; }
-    .edit-btn { 
-      background: none; 
-      border: none; 
-      cursor: pointer; 
-      position: absolute; 
-      top: 4px; 
-      right: 4px; 
-      font-size: 18px; 
-      color: #28a745; 
-    }
-    .edit-btn:hover { color: #1c7c31; }
     #clearAll { background: #ff9800; color: white; border: none; padding: 6px 10px; border-radius: 6px; }
     #clearAll:hover { background: #e68900; }
     .section { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 15px; background: #fff; }
-    td.position-relative { position: relative; }
   </style>
 </head>
 <body>
@@ -129,16 +118,6 @@
 
     function deleteItem(index){ items.splice(index,1); saveItems(); renderTable(); }
 
-    function editItem(index){
-      const item = items[index];
-      const newName = prompt("แก้ไขชื่อวัตถุดิบ:", item.name);
-      const newPrice = parseFloat(prompt("แก้ไขราคา/หน่วย:", item.price));
-      const newQty = prompt("แก้ไขจำนวน:", item.qty);
-      if(!newName || isNaN(newPrice) || !newQty){ alert("ข้อมูลไม่ถูกต้อง"); return; }
-      items[index] = { name:newName, price:newPrice, qty:newQty };
-      saveItems(); renderTable();
-    }
-
     function clearAll(){
       if(confirm("คุณต้องการลบรายการทั้งหมดใช่หรือไม่?")){ items=[]; saveItems(); renderTable(); }
     }
@@ -147,25 +126,37 @@
       const tbody = document.querySelector("#itemTable tbody");
       tbody.innerHTML = "";
       let totalRaw = 0;
+
       items.forEach((item,index)=>{
         const qtyObj = parseQuantity(item.qty);
         const subtotal = item.price * qtyObj.value;
         totalRaw += subtotal;
+
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td class="position-relative">${item.name}
-            <button class="edit-btn" onclick="editItem(${index})">⚙️</button>
-          </td>
-          <td>${item.price}</td>
-          <td>${item.qty}</td>
+          <td contenteditable="true" data-field="name">${item.name}</td>
+          <td contenteditable="true" data-field="price">${item.price}</td>
+          <td contenteditable="true" data-field="qty">${item.qty}</td>
           <td>${subtotal.toFixed(2)}</td>
-          <td>
-            <button class="delete-btn" onclick="deleteItem(${index})">ลบ</button>
-          </td>
+          <td><button class="delete-btn" onclick="deleteItem(${index})">ลบ</button></td>
         `;
+
+        // บันทึกอัตโนมัติเมื่อแก้ไข
+        row.querySelectorAll("td[contenteditable]").forEach(td=>{
+          td.addEventListener("blur",()=>{
+            const field = td.getAttribute("data-field");
+            let value = td.textContent;
+            if(field==="price") value = parseFloat(value)||0;
+            items[index][field] = value;
+            saveItems();
+            renderTable();
+          });
+        });
+
         tbody.appendChild(row);
       });
 
+      // คำนวณต้นทุนรวม + กำไร
       const labor = parseFloat(document.getElementById("labor").value)||0;
       const people = parseFloat(document.getElementById("people").value)||1;
       const electric = parseFloat(document.getElementById("electric").value)||0;
@@ -174,9 +165,9 @@
       const months = parseFloat(document.getElementById("months").value)||1;
 
       let totalLabor = people>0? labor/people : labor;
-      let totalUtility = electric+water;
+      let totalUtility = electric + water;
       let totalCost = totalRaw + totalLabor + totalUtility;
-      let totalSale = totalCost * Math.pow(1+profitPercent/100, months);
+      let totalSale = totalCost * Math.pow(1 + profitPercent/100, months);
 
       document.getElementById("total").textContent = "ต้นทุนรวม: " + totalCost.toFixed(2) + " บาท";
       document.getElementById("totalProfit").textContent = `ราคาขายรวมกำไร (${months} เดือน): ` + totalSale.toFixed(2) + " บาท";
