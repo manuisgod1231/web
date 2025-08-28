@@ -4,31 +4,21 @@
   <meta charset="UTF-8">
   <title>เว็บคำนวณต้นทุน</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- PWA -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#007bff">
   <link rel="icon" href="icon.png">
-
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: auto;
-      padding: 20px;
-      background: #f9fafb;
-    }
+    body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background: #f9fafb; }
     h1 { text-align: center; color: #333; }
-    input, button {
-      padding: 8px; margin: 5px;
-      border-radius: 6px; border: 1px solid #ccc;
-    }
+    input, button { padding: 8px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
     button { background: #007bff; color: white; border: none; cursor: pointer; }
     button:hover { background: #0056b3; }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     table, th, td { border: 1px solid #ddd; text-align: center; padding: 8px; }
     th { background: #f0f0f0; }
     .total { font-size: 1.2em; font-weight: bold; margin-top: 15px; text-align: right; }
+    .delete-btn { background: #dc3545; padding: 4px 8px; border-radius: 4px; }
+    .delete-btn:hover { background: #a71d2a; }
   </style>
 </head>
 <body>
@@ -48,6 +38,7 @@
         <th>ราคา/หน่วย</th>
         <th>จำนวน</th>
         <th>รวม</th>
+        <th>จัดการ</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -77,21 +68,28 @@
       document.getElementById("qty").value = "";
     }
 
+    function deleteItem(index) {
+      items.splice(index, 1);
+      localStorage.setItem("items", JSON.stringify(items));
+      renderTable();
+    }
+
     function renderTable() {
       const tbody = document.querySelector("#itemTable tbody");
       tbody.innerHTML = "";
       let total = 0;
 
-      items.forEach(item => {
-        const row = document.createElement("tr");
+      items.forEach((item, index) => {
         const subtotal = item.price * item.qty;
         total += subtotal;
 
+        const row = document.createElement("tr");
         row.innerHTML = `
           <td>${item.name}</td>
           <td>${item.price}</td>
           <td>${item.qty}</td>
           <td>${subtotal.toFixed(2)}</td>
+          <td><button class="delete-btn" onclick="deleteItem(${index})">ลบ</button></td>
         `;
         tbody.appendChild(row);
       });
@@ -101,7 +99,6 @@
 
     renderTable();
 
-    // สมัคร service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
     }
