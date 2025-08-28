@@ -11,19 +11,28 @@
     body { font-family: Arial; max-width: 900px; margin: auto; padding: 20px; background: #f9fafb; }
     h1, h2 { text-align: center; color: #333; }
     input, button { padding: 8px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
-    button { background: #007bff; color: white; border: none; cursor: pointer; }
-    button:hover { background: #0056b3; }
+    button { cursor: pointer; }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     table, th, td { border: 1px solid #ddd; text-align: center; padding: 8px; }
     th { background: #f0f0f0; }
     .total { font-size: 1.2em; font-weight: bold; margin-top: 15px; text-align: right; }
-    .delete-btn { background: #dc3545; padding: 4px 8px; border-radius: 4px; }
+    .delete-btn { background: #dc3545; padding: 4px 8px; border-radius: 4px; border: none; color: white; }
     .delete-btn:hover { background: #a71d2a; }
-    .edit-btn { background: #28a745; padding: 4px 8px; border-radius: 4px; margin-right:5px; }
-    .edit-btn:hover { background: #1c7c31; }
-    #clearAll { background: #ff9800; }
+    .edit-btn { 
+      background: none; 
+      border: none; 
+      cursor: pointer; 
+      position: absolute; 
+      top: 4px; 
+      right: 4px; 
+      font-size: 18px; 
+      color: #28a745; 
+    }
+    .edit-btn:hover { color: #1c7c31; }
+    #clearAll { background: #ff9800; color: white; border: none; padding: 6px 10px; border-radius: 6px; }
     #clearAll:hover { background: #e68900; }
     .section { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 15px; background: #fff; }
+    td.position-relative { position: relative; }
   </style>
 </head>
 <body>
@@ -37,7 +46,7 @@
       <input id="price" type="number" placeholder="ราคา/หน่วย">
       <input id="qty" type="text" placeholder="จำนวน เช่น 1 ขีด, 500 กรัม">
       <button onclick="addItem()">เพิ่ม</button>
-      <button onclick="clearAll()">ลบทั้งหมด</button>
+      <button id="clearAll" onclick="clearAll()">ลบทั้งหมด</button>
     </div>
     <table id="itemTable">
       <thead>
@@ -88,129 +97,96 @@
 
     function saveItems() {
       localStorage.setItem("items", JSON.stringify(items));
-      localStorage.setItem("labor", document.getElementById("labor").value);
-      localStorage.setItem("people", document.getElementById("people").value);
-      localStorage.setItem("electric", document.getElementById("electric").value);
-      localStorage.setItem("water", document.getElementById("water").value);
-      localStorage.setItem("profit", document.getElementById("profit").value);
-      localStorage.setItem("months", document.getElementById("months").value);
+      ['labor','people','electric','water','profit','months'].forEach(id=>{
+        localStorage.setItem(id, document.getElementById(id).value);
+      });
     }
 
     window.onload = function() {
-      document.getElementById("labor").value = localStorage.getItem("labor") || "";
-      document.getElementById("people").value = localStorage.getItem("people") || "";
-      document.getElementById("electric").value = localStorage.getItem("electric") || "";
-      document.getElementById("water").value = localStorage.getItem("water") || "";
-      document.getElementById("profit").value = localStorage.getItem("profit") || "";
-      document.getElementById("months").value = localStorage.getItem("months") || "1";
+      ['labor','people','electric','water','profit','months'].forEach(id=>{
+        document.getElementById(id).value = localStorage.getItem(id) || (id==='months'?'1':'');
+      });
       renderTable();
     }
 
     function parseQuantity(qtyStr) {
       const match = qtyStr.match(/([\d.]+)\s*(\S*)/);
-      if (!match) return { value: 0, unit: "" };
-      return { value: parseFloat(match[1]), unit: match[2] };
+      return match ? { value: parseFloat(match[1]), unit: match[2] } : { value:0, unit:'' };
     }
 
     function addItem() {
       const name = document.getElementById("name").value;
       const price = parseFloat(document.getElementById("price").value);
       const qty = document.getElementById("qty").value;
-
-      if (!name || isNaN(price) || !qty) {
-        alert("กรอกข้อมูลให้ครบ");
-        return;
-      }
-
+      if(!name || isNaN(price) || !qty){ alert("กรอกข้อมูลให้ครบ"); return; }
       items.push({ name, price, qty });
       saveItems();
       renderTable();
-
       document.getElementById("name").value = "";
       document.getElementById("price").value = "";
       document.getElementById("qty").value = "";
     }
 
-    function deleteItem(index) {
-      items.splice(index, 1);
-      saveItems();
-      renderTable();
-    }
+    function deleteItem(index){ items.splice(index,1); saveItems(); renderTable(); }
 
-    function editItem(index) {
+    function editItem(index){
       const item = items[index];
       const newName = prompt("แก้ไขชื่อวัตถุดิบ:", item.name);
       const newPrice = parseFloat(prompt("แก้ไขราคา/หน่วย:", item.price));
       const newQty = prompt("แก้ไขจำนวน:", item.qty);
-
-      if (!newName || isNaN(newPrice) || !newQty) {
-        alert("ข้อมูลไม่ถูกต้อง");
-        return;
-      }
-
-      items[index] = { name: newName, price: newPrice, qty: newQty };
-      saveItems();
-      renderTable();
+      if(!newName || isNaN(newPrice) || !newQty){ alert("ข้อมูลไม่ถูกต้อง"); return; }
+      items[index] = { name:newName, price:newPrice, qty:newQty };
+      saveItems(); renderTable();
     }
 
-    function clearAll() {
-      if(confirm("คุณต้องการลบรายการทั้งหมดใช่หรือไม่?")) {
-        items = [];
-        saveItems();
-        renderTable();
-      }
+    function clearAll(){
+      if(confirm("คุณต้องการลบรายการทั้งหมดใช่หรือไม่?")){ items=[]; saveItems(); renderTable(); }
     }
 
-    function renderTable() {
+    function renderTable(){
       const tbody = document.querySelector("#itemTable tbody");
       tbody.innerHTML = "";
       let totalRaw = 0;
-
-      items.forEach((item, index) => {
+      items.forEach((item,index)=>{
         const qtyObj = parseQuantity(item.qty);
         const subtotal = item.price * qtyObj.value;
         totalRaw += subtotal;
-
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td>${item.name}</td>
+          <td class="position-relative">${item.name}
+            <button class="edit-btn" onclick="editItem(${index})">⚙️</button>
+          </td>
           <td>${item.price}</td>
           <td>${item.qty}</td>
           <td>${subtotal.toFixed(2)}</td>
           <td>
-            <button class="edit-btn" onclick="editItem(${index})">แก้ไข</button>
             <button class="delete-btn" onclick="deleteItem(${index})">ลบ</button>
           </td>
         `;
         tbody.appendChild(row);
       });
 
-      const labor = parseFloat(document.getElementById("labor").value) || 0;
-      const people = parseFloat(document.getElementById("people").value) || 1;
-      const electric = parseFloat(document.getElementById("electric").value) || 0;
-      const water = parseFloat(document.getElementById("water").value) || 0;
-      const profitPercent = parseFloat(document.getElementById("profit").value) || 0;
-      const months = parseFloat(document.getElementById("months").value) || 1;
+      const labor = parseFloat(document.getElementById("labor").value)||0;
+      const people = parseFloat(document.getElementById("people").value)||1;
+      const electric = parseFloat(document.getElementById("electric").value)||0;
+      const water = parseFloat(document.getElementById("water").value)||0;
+      const profitPercent = parseFloat(document.getElementById("profit").value)||0;
+      const months = parseFloat(document.getElementById("months").value)||1;
 
-      let totalLabor = people>0 ? labor/people : labor;
-      let totalUtility = electric + water;
+      let totalLabor = people>0? labor/people : labor;
+      let totalUtility = electric+water;
       let totalCost = totalRaw + totalLabor + totalUtility;
-      let totalSale = totalCost * Math.pow(1 + profitPercent/100, months);
+      let totalSale = totalCost * Math.pow(1+profitPercent/100, months);
 
       document.getElementById("total").textContent = "ต้นทุนรวม: " + totalCost.toFixed(2) + " บาท";
       document.getElementById("totalProfit").textContent = `ราคาขายรวมกำไร (${months} เดือน): ` + totalSale.toFixed(2) + " บาท";
     }
 
-    ['labor','people','electric','water','profit','months'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => {
-        saveItems();
-        renderTable();
-      });
+    ['labor','people','electric','water','profit','months'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', ()=>{ saveItems(); renderTable(); });
     });
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
-    }
+    if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js'); }
   </script>
 </body>
 </html>
