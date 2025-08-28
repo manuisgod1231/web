@@ -2,13 +2,13 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>เว็บคำนวณต้นทุน</title>
+  <title>เว็บคำนวณต้นทุนครบวงจร</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#007bff">
   <link rel="icon" href="icon.png">
   <style>
-    body { font-family: Arial; max-width: 800px; margin: auto; padding: 20px; background: #f9fafb; }
+    body { font-family: Arial; max-width: 900px; margin: auto; padding: 20px; background: #f9fafb; }
     h1 { text-align: center; color: #333; }
     input, button { padding: 8px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
     button { background: #007bff; color: white; border: none; cursor: pointer; }
@@ -26,8 +26,9 @@
   </style>
 </head>
 <body>
-  <h1>เว็บคำนวณต้นทุน</h1>
+  <h1>เว็บคำนวณต้นทุนครบวงจร</h1>
 
+  <!-- วัตถุดิบ -->
   <div>
     <input id="name" placeholder="ชื่อวัตถุดิบ">
     <input id="price" type="number" placeholder="ราคา/หน่วย">
@@ -36,6 +37,17 @@
     <button id="clearAll" onclick="clearAll()">ลบทั้งหมด</button>
   </div>
 
+  <!-- ค่าแรง, คน, ไฟ, น้ำ, กำไร, เดือน -->
+  <div style="margin-top:15px;">
+    <input id="labor" type="number" placeholder="ค่าแรงรวม">
+    <input id="people" type="number" placeholder="จำนวนคน">
+    <input id="electric" type="number" placeholder="ค่าไฟ">
+    <input id="water" type="number" placeholder="ค่าน้ำ">
+    <input id="profit" type="number" placeholder="กำไร (%) ต่อเดือน">
+    <input id="months" type="number" placeholder="จำนวนเดือน">
+  </div>
+
+  <!-- ตารางวัตถุดิบ -->
   <table id="itemTable">
     <thead>
       <tr>
@@ -49,17 +61,33 @@
     <tbody></tbody>
   </table>
 
+  <!-- ต้นทุนและราคาขาย -->
   <div class="total" id="total">ต้นทุนรวม: 0 บาท</div>
+  <div class="total" id="totalProfit">ราคาขายรวมกำไร: 0 บาท</div>
 
   <script>
     let items = JSON.parse(localStorage.getItem("items") || "[]");
 
-    // บันทึก LocalStorage
     function saveItems() {
       localStorage.setItem("items", JSON.stringify(items));
+      localStorage.setItem("labor", document.getElementById("labor").value);
+      localStorage.setItem("people", document.getElementById("people").value);
+      localStorage.setItem("electric", document.getElementById("electric").value);
+      localStorage.setItem("water", document.getElementById("water").value);
+      localStorage.setItem("profit", document.getElementById("profit").value);
+      localStorage.setItem("months", document.getElementById("months").value);
     }
 
-    // แยกเลขออกจากหน่วย
+    window.onload = function() {
+      document.getElementById("labor").value = localStorage.getItem("labor") || "";
+      document.getElementById("people").value = localStorage.getItem("people") || "";
+      document.getElementById("electric").value = localStorage.getItem("electric") || "";
+      document.getElementById("water").value = localStorage.getItem("water") || "";
+      document.getElementById("profit").value = localStorage.getItem("profit") || "";
+      document.getElementById("months").value = localStorage.getItem("months") || "1";
+      renderTable();
+    }
+
     function parseQuantity(qtyStr) {
       const match = qtyStr.match(/([\d.]+)\s*(\S*)/);
       if (!match) return { value: 0, unit: "" };
@@ -139,12 +167,33 @@
         tbody.appendChild(row);
       });
 
-      document.getElementById("total").textContent = "ต้นทุนรวม: " + total.toFixed(2) + " บาท";
+      // ค่าอื่น ๆ
+      const labor = parseFloat(document.getElementById("labor").value) || 0;
+      const people = parseFloat(document.getElementById("people").value) || 1;
+      const electric = parseFloat(document.getElementById("electric").value) || 0;
+      const water = parseFloat(document.getElementById("water").value) || 0;
+      const profitPercent = parseFloat(document.getElementById("profit").value) || 0;
+      const months = parseFloat(document.getElementById("months").value) || 1;
+
+      // ต้นทุนรวม
+      let totalCost = total + labor + electric + water;
+      if (people > 0) totalCost += labor / people;
+
+      // ราคาขายรวมกำไรทบต้นรายเดือน
+      let totalSale = totalCost * Math.pow(1 + profitPercent/100, months);
+
+      document.getElementById("total").textContent = "ต้นทุนรวม: " + totalCost.toFixed(2) + " บาท";
+      document.getElementById("totalProfit").textContent = `ราคาขายรวมกำไร (${months} เดือน): ` + totalSale.toFixed(2) + " บาท";
     }
 
-    renderTable();
+    // อัปเดตค่าต้นทุนเมื่อเปลี่ยน input อื่น ๆ
+    ['labor','people','electric','water','profit','months'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        saveItems();
+        renderTable();
+      });
+    });
 
-    // PWA Service Worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js');
     }
