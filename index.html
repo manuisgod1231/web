@@ -4,13 +4,10 @@
   <meta charset="UTF-8">
   <title>เว็บคำนวณต้นทุนครบวงจร</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#007bff">
-  <link rel="icon" href="icon.png">
   <style>
     body { font-family: Arial; max-width: 900px; margin: auto; padding: 20px; background: #f9fafb; }
     h1, h2 { text-align: center; color: #333; }
-    input, button { padding: 8px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
+    input, select, button { padding: 8px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
     button { cursor: pointer; }
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     table, th, td { border: 1px solid #ddd; text-align: center; padding: 8px; }
@@ -22,6 +19,27 @@
     #clearAll { background: #ff9800; color: white; border: none; padding: 6px 10px; border-radius: 6px; }
     #clearAll:hover { background: #e68900; }
     .section { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 15px; background: #fff; }
+
+    /* ปุ่มโดเนท มุมซ้ายล่าง */
+    #donateBtn {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      z-index: 999;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    #donateBtn img {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    #donateBtn img:hover {
+      transform: scale(1.1);
+    }
   </style>
 </head>
 <body>
@@ -69,30 +87,40 @@
     </div>
   </div>
 
-  <!-- กำไรต่อเดือน -->
+  <!-- กำไร -->
   <div class="section">
-    <h2>กำไรต่อเดือน</h2>
+    <h2>กำไร</h2>
     <div>
-      <input id="profit" type="number" placeholder="กำไร (%) ต่อเดือน">
-      <input id="months" type="number" placeholder="จำนวนเดือน">
+      <input id="profit" type="number" placeholder="กำไร (%)">
+      <select id="profitUnit">
+        <option value="day">รายวัน</option>
+        <option value="month" selected>รายเดือน</option>
+        <option value="year">รายปี</option>
+      </select>
+      <input id="months" type="number" placeholder="จำนวนวัน/เดือน/ปี">
     </div>
   </div>
 
   <div class="total" id="total">ต้นทุนรวม: 0 บาท</div>
   <div class="total" id="totalProfit">ราคาขายรวมกำไร: 0 บาท</div>
 
+  <!-- ปุ่มโดเนท -->
+  <button id="donateBtn">
+    <img src="https://drive.google.com/uc?export=view&id=1M3FLPg5jJQraRE3weUtRLGMiUro5JJcK" alt="Donate" />
+  </button>
+
   <script>
     let items = JSON.parse(localStorage.getItem("items") || "[]");
 
     function saveItems() {
       localStorage.setItem("items", JSON.stringify(items));
-      ['labor','people','electric','water','profit','months'].forEach(id=>{
+      ['labor','people','electric','water','profit','months','profitUnit'].forEach(id=>{
         localStorage.setItem(id, document.getElementById(id).value);
       });
     }
 
     window.onload = function() {
-      ['labor','people','electric','water','profit','months'].forEach(id=>{
+      ['labor','people','electric','water','profit','months','profitUnit'].forEach(id=>{
         document.getElementById(id).value = localStorage.getItem(id) || (id==='months'?'1':'');
       });
       renderTable();
@@ -117,7 +145,6 @@
     }
 
     function deleteItem(index){ items.splice(index,1); saveItems(); renderTable(); }
-
     function clearAll(){
       if(confirm("คุณต้องการลบรายการทั้งหมดใช่หรือไม่?")){ items=[]; saveItems(); renderTable(); }
     }
@@ -141,7 +168,6 @@
           <td><button class="delete-btn" onclick="deleteItem(${index})">ลบ</button></td>
         `;
 
-        // บันทึกอัตโนมัติเมื่อแก้ไข
         row.querySelectorAll("td[contenteditable]").forEach(td=>{
           td.addEventListener("blur",()=>{
             const field = td.getAttribute("data-field");
@@ -156,28 +182,36 @@
         tbody.appendChild(row);
       });
 
-      // คำนวณต้นทุนรวม + กำไร
       const labor = parseFloat(document.getElementById("labor").value)||0;
       const people = parseFloat(document.getElementById("people").value)||1;
       const electric = parseFloat(document.getElementById("electric").value)||0;
       const water = parseFloat(document.getElementById("water").value)||0;
       const profitPercent = parseFloat(document.getElementById("profit").value)||0;
-      const months = parseFloat(document.getElementById("months").value)||1;
+      const unit = document.getElementById("profitUnit").value;
+      let periods = parseFloat(document.getElementById("months").value)||1;
+
+      if(unit==='day'){ periods = periods; }
+      else if(unit==='month'){ periods = periods; }
+      else if(unit==='year'){ periods = periods*12; }
 
       let totalLabor = people>0? labor/people : labor;
       let totalUtility = electric + water;
       let totalCost = totalRaw + totalLabor + totalUtility;
-      let totalSale = totalCost * Math.pow(1 + profitPercent/100, months);
+      let totalSale = totalCost * Math.pow(1 + profitPercent/100, periods);
 
       document.getElementById("total").textContent = "ต้นทุนรวม: " + totalCost.toFixed(2) + " บาท";
-      document.getElementById("totalProfit").textContent = `ราคาขายรวมกำไร (${months} เดือน): ` + totalSale.toFixed(2) + " บาท";
+      document.getElementById("totalProfit").textContent = `ราคาขายรวมกำไร (${periods} รอบ): ` + totalSale.toFixed(2) + " บาท";
     }
 
-    ['labor','people','electric','water','profit','months'].forEach(id=>{
+    ['labor','people','electric','water','profit','months','profitUnit'].forEach(id=>{
       document.getElementById(id).addEventListener('input', ()=>{ saveItems(); renderTable(); });
     });
 
-    if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js'); }
+    // ปุ่มโดเนท
+    document.getElementById("donateBtn").addEventListener("click", ()=>{
+      alert("ขอบคุณที่สนับสนุน!");
+    });
+
   </script>
 </body>
 </html>
