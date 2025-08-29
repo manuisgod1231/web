@@ -38,16 +38,16 @@ button:hover {background:#45a049;}
 /* โหมดมืด */
 body.dark {
   background: linear-gradient(to bottom right, #1c1c1c, #2c2c2c);
-  color: #ddd;
+  color: #fff;
 }
 body.dark .container {
   background:#2c2c2c;
   box-shadow:0 10px 30px rgba(0,0,0,0.5);
-  color:#ddd;
+  color:#fff;
 }
 body.dark input, body.dark select {
   background:#444;
-  color:#eee;
+  color:#fff;
   border:1px solid #555;
 }
 body.dark button {
@@ -55,9 +55,9 @@ body.dark button {
   color:#fff;
 }
 body.dark button:hover {background:#777;}
-body.dark details {background:#333; box-shadow:0 2px 8px rgba(0,0,0,0.6);}
+body.dark details {background:#333; box-shadow:0 2px 8px rgba(0,0,0,0.6); color:#fff;}
 body.dark #result {background:#333; border:1px solid #555; color:#fff;}
-body.dark #saveImageBtn {background:#f57c00;}
+body.dark #saveImageBtn {background:#f57c00; color:#fff;}
 </style>
 </head>
 <body>
@@ -159,7 +159,7 @@ const texts = {
   }
 };
 
-// --- เปลี่ยนภาษา ---
+// เปลี่ยนภาษา
 document.getElementById("langSelect").addEventListener("change", e=>{
   const lang=e.target.value;
   document.getElementById("title").textContent=texts[lang].title;
@@ -177,7 +177,7 @@ document.getElementById("langSelect").addEventListener("change", e=>{
   document.getElementById("installText").textContent=texts[lang].install;
 });
 
-// --- ฟังก์ชันวัตถุดิบ ---
+// ฟังก์ชันวัตถุดิบ
 function addMaterial(name="", cost=""){
   materialCount++;
   const div = document.createElement("div");
@@ -192,13 +192,11 @@ function addMaterial(name="", cost=""){
   document.getElementById("materials").appendChild(div);
   checkCanCalculate();
 }
-
 function deleteMaterial(id){
   const el=document.getElementById("material-"+id);
   if(el) el.remove();
   checkCanCalculate();
 }
-
 function editMaterial(id){
   const div=document.getElementById("material-"+id);
   const inputs=div.getElementsByTagName("input");
@@ -206,7 +204,7 @@ function editMaterial(id){
   inputs[1].disabled=!inputs[1].disabled;
 }
 
-// --- ตรวจสอบว่ากดคำนวณได้หรือไม่ ---
+// ตรวจสอบว่ากดคำนวณได้หรือไม่
 function checkCanCalculate(){
   const rows = document.querySelectorAll("#materials .input-row");
   let hasMaterial=false;
@@ -224,14 +222,12 @@ function checkCanCalculate(){
 
   document.getElementById("calcBtn").disabled = !(hasMaterial && hasLabor);
 }
-
-// เริ่มต้นปิดปุ่มคำนวณ
 document.getElementById("calcBtn").disabled = true;
 ["workers","wage","water","electricity"].forEach(id=>{
   document.getElementById(id).addEventListener("input", checkCanCalculate);
 });
 
-// --- คำนวณ ---
+// คำนวณ
 function calculate(){
   const workers = parseFloat(document.getElementById("workers").value)||0;
   const wage = parseFloat(document.getElementById("wage").value)||0;
@@ -269,19 +265,15 @@ function calculate(){
   document.getElementById("saveImageBtn").style.display="inline-block";
 }
 
-// --- save screenshot แค่ #result + วัตถุดิบ ---
+// บันทึกภาพ
 document.getElementById("saveImageBtn").addEventListener("click", ()=>{
-  const result = document.getElementById("result");
-  const tempDiv = document.createElement("div");
-  tempDiv.style.padding = "20px";
-  tempDiv.style.background = window.getComputedStyle(result).background;
-  tempDiv.style.borderRadius = "16px";
-  tempDiv.style.color = window.getComputedStyle(result).color;
-  tempDiv.style.fontFamily = "Segoe UI, Tahoma, Geneva, Verdana, sans-serif";
-  tempDiv.style.lineHeight = "1.6";
-
+  const result=document.getElementById("result");
+  const tempDiv=document.createElement("div");
+  tempDiv.style.padding="20px"; tempDiv.style.borderRadius="16px"; tempDiv.style.background="#fff"; tempDiv.style.color=document.body.classList.contains("dark")?"#fff":"#000";
+  tempDiv.style.lineHeight="1.6";
   tempDiv.innerHTML = result.innerHTML;
 
+  // เพิ่มรายละเอียดวัตถุดิบ
   const rows = document.querySelectorAll("#materials .input-row");
   if(rows.length > 0){
     let materialText = "<br>🥦 รายละเอียดวัตถุดิบ:<br>";
@@ -303,14 +295,14 @@ document.getElementById("saveImageBtn").addEventListener("click", ()=>{
   });
 });
 
-// --- Theme toggle ---
+// โหมดมืด/สว่าง
 const themeBtn = document.getElementById("themeBtn");
 themeBtn.addEventListener("click", () => {
   document.body.classList.toggle("dark");
   themeBtn.textContent = document.body.classList.contains("dark") ? "☀️ โหมดสว่าง" : "🌙 โหมดมืด";
 });
 
-// --- Add to Home / Service Worker ---
+// Add to Home
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt",(e)=>{
   e.preventDefault(); deferredPrompt=e;
@@ -320,6 +312,8 @@ document.getElementById("installBtn").addEventListener("click", async ()=>{
   document.getElementById("installPopup").style.display="none";
   if(deferredPrompt){deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});}
 });
+
+// Service Worker
 if("serviceWorker" in navigator){
   const swCode=`self.addEventListener("install",e=>{self.skipWaiting();});
   self.addEventListener("activate",e=>{clients.claim();});
