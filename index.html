@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แอปคำนวณต้นทุน</title>
+<title>แอปคำนวณต้นทุน Modern</title>
 <meta name="theme-color" content="#4CAF50">
 <style>
 body {
@@ -27,6 +27,7 @@ details summary {font-weight:600; font-size:16px; cursor:pointer; color:#34495e;
 .input-row input:focus, .input-row select:focus {border-color:#4CAF50; outline:none; box-shadow:0 0 6px rgba(76,175,80,0.3);}
 button {padding:10px 18px; margin-top:12px; cursor:pointer; border:none; border-radius:12px; background:#4CAF50; color:white; font-weight:600; font-size:15px; transition:0.2s;}
 button:hover {background:#45a049;}
+#calcBtn:disabled {background:#888; cursor:not-allowed;}
 #result {margin-top:20px; padding:20px; border-radius:16px; background:#e8f5e9; border:1px solid #a5d6a7; font-weight:500; line-height:1.6;}
 #saveImageBtn {background:#ff9800; margin-left:10px; display:none;}
 #saveImageBtn:hover { background:#fb8c00; }
@@ -77,8 +78,15 @@ body.dark #saveImageBtn {background:#f57c00;}
 
   <h2 id="title">📊 แอปคำนวณต้นทุน Modern</h2>
 
-  <!-- ค่าแรง & ค่าใช้จ่าย -->
+  <!-- วัตถุดิบ (อยู่บนสุด) -->
   <details open>
+    <summary id="labelMaterial">🥦 วัตถุดิบ</summary>
+    <button id="addMaterialBtn" style="margin-bottom:10px;" onclick="addMaterial()">+ เพิ่มวัตถุดิบ</button>
+    <div id="materials"></div>
+  </details>
+
+  <!-- ค่าแรง & ค่าใช้จ่าย -->
+  <details>
     <summary id="labelLabor">💼 ค่าแรง & ค่าใช้จ่าย</summary>
     <div class="input-row">
       <input type="number" id="workers" placeholder="จำนวนคน">
@@ -88,13 +96,6 @@ body.dark #saveImageBtn {background:#f57c00;}
       <input type="number" id="water" placeholder="ค่าน้ำ">
       <input type="number" id="electricity" placeholder="ค่าไฟ">
     </div>
-  </details>
-
-  <!-- วัตถุดิบ -->
-  <details>
-    <summary id="labelMaterial">🥦 วัตถุดิบ</summary>
-    <button id="addMaterialBtn" style="margin-bottom:10px;" onclick="addMaterial()">+ เพิ่มวัตถุดิบ</button>
-    <div id="materials"></div>
   </details>
 
   <!-- กำไร -->
@@ -111,7 +112,7 @@ body.dark #saveImageBtn {background:#f57c00;}
     </div>
   </details>
 
-  <button onclick="calculate()" id="calcBtn">คำนวณ</button>
+  <button onclick="calculate()" id="calcBtn" disabled>คำนวณ</button>
   <button id="saveImageBtn">บันทึกภาพ</button>
   <div id="result"></div>
 </div>
@@ -176,7 +177,7 @@ document.getElementById("langSelect").addEventListener("change", e=>{
   document.getElementById("installText").textContent=texts[lang].install;
 });
 
-// --- ฟังก์ชันวัตถุดิบ & ตรวจสอบ ---
+// --- ฟังก์ชันวัตถุดิบ ---
 function addMaterial(name="", cost=""){
   materialCount++;
   const div = document.createElement("div");
@@ -205,6 +206,7 @@ function editMaterial(id){
   inputs[1].disabled=!inputs[1].disabled;
 }
 
+// --- ตรวจสอบว่ากดคำนวณได้หรือไม่ ---
 function checkCanCalculate(){
   const rows = document.querySelectorAll("#materials .input-row");
   let hasMaterial=false;
@@ -267,17 +269,48 @@ function calculate(){
   document.getElementById("saveImageBtn").style.display="inline-block";
 }
 
-// --- save screenshot ---
+// --- save screenshot แค่ #result + วัตถุดิบ ---
 document.getElementById("saveImageBtn").addEventListener("click", ()=>{
-  html2canvas(document.getElementById("appContent")).then(canvas=>{
+  const result = document.getElementById("result");
+  const tempDiv = document.createElement("div");
+  tempDiv.style.padding = "20px";
+  tempDiv.style.background = window.getComputedStyle(result).background;
+  tempDiv.style.borderRadius = "16px";
+  tempDiv.style.color = window.getComputedStyle(result).color;
+  tempDiv.style.fontFamily = "Segoe UI, Tahoma, Geneva, Verdana, sans-serif";
+  tempDiv.style.lineHeight = "1.6";
+
+  tempDiv.innerHTML = result.innerHTML;
+
+  const rows = document.querySelectorAll("#materials .input-row");
+  if(rows.length > 0){
+    let materialText = "<br>🥦 รายละเอียดวัตถุดิบ:<br>";
+    rows.forEach(row=>{
+      const name = row.children[0].value || "(ไม่ระบุชื่อ)";
+      const cost = row.children[1].value || "0";
+      materialText += `${name}: ${cost}<br>`;
+    });
+    tempDiv.innerHTML += materialText;
+  }
+
+  document.body.appendChild(tempDiv);
+  html2canvas(tempDiv).then(canvas=>{
     const link=document.createElement("a");
     link.download="calculation.png";
     link.href=canvas.toDataURL();
     link.click();
+    document.body.removeChild(tempDiv);
   });
 });
 
-// --- Add to Home ---
+// --- Theme toggle ---
+const themeBtn = document.getElementById("themeBtn");
+themeBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark");
+  themeBtn.textContent = document.body.classList.contains("dark") ? "☀️ โหมดสว่าง" : "🌙 โหมดมืด";
+});
+
+// --- Add to Home / Service Worker ---
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt",(e)=>{
   e.preventDefault(); deferredPrompt=e;
@@ -287,8 +320,6 @@ document.getElementById("installBtn").addEventListener("click", async ()=>{
   document.getElementById("installPopup").style.display="none";
   if(deferredPrompt){deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});}
 });
-
-// --- Service Worker inline ---
 if("serviceWorker" in navigator){
   const swCode=`self.addEventListener("install",e=>{self.skipWaiting();});
   self.addEventListener("activate",e=>{clients.claim();});
@@ -296,22 +327,8 @@ if("serviceWorker" in navigator){
   const blob=new Blob([swCode],{type:"application/javascript"});
   navigator.serviceWorker.register(URL.createObjectURL(blob)).then(reg=>{
     console.log("SW registered");
-    reg.onupdatefound=()=>{const newWorker=reg.installing;
-      newWorker.onstatechange=()=>{if(newWorker.state==="installed"&&navigator.serviceWorker.controller){
-        console.log("🔄 update detected, reload"); window.location.reload();}};};
   });
 }
-
-// --- Theme toggle ---
-const themeBtn = document.getElementById("themeBtn");
-themeBtn.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-  if(document.body.classList.contains("dark")){
-    themeBtn.textContent = "☀️ โหมดสว่าง";
-  } else {
-    themeBtn.textContent = "🌙 โหมดมืด";
-  }
-});
 </script>
 </body>
 </html>
