@@ -3,57 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>แอปคำนวณต้นทุน</title>
+<title>แอปคำนวณต้นทุน Modern</title>
 <meta name="theme-color" content="#4CAF50">
-
-<!-- PWA manifest แบบ inline -->
-<script type="application/manifest+json" id="manifest">
-{
-  "name": "แอปคำนวณต้นทุน",
-  "short_name": "ต้นทุน",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4CAF50",
-  "icons": [
-    { "src": "https://via.placeholder.com/192", "sizes": "192x192", "type": "image/png" },
-    { "src": "https://via.placeholder.com/512", "sizes": "512x512", "type": "image/png" }
-  ]
-}
-</script>
-
 <style>
-body {font-family:sans-serif; margin:0; padding:20px; display:flex; justify-content:center; background:#f4f4f4;}
-.container {width:95%; max-width:800px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
-h2 {margin-top:0; text-align:center;}
-details {margin:10px 0; border:1px solid #ccc; border-radius:8px; padding:10px; background:#fafafa;}
-details summary {font-weight:bold; cursor:pointer;}
-.input-row {display:flex; gap:10px; margin-bottom:10px;}
-.input-row input {flex:1; padding:6px;}
-button {padding:8px 16px; margin-top:10px; cursor:pointer; border:none; border-radius:6px; background:#007bff; color:white;}
-button:hover {background:#0056b3;}
-#result {margin-top:20px; padding:15px; border-radius:8px; background:#e9f7ef; border:1px solid #28a745;}
-#saveImageBtn {background:#28a745; margin-left:10px; display:none;}
-#donateBtn {position:fixed; left:20px; bottom:20px; z-index:1000; background:none; border:none; cursor:pointer;}
-#donateBtn img {width:60px; height:60px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.3); transition: transform 0.2s;}
-#donateBtn img:hover {transform: scale(1.1);}
-#donatePopup {display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.7); justify-content:center; align-items:center;}
-.popup-content {position:relative; background:#fff; padding:15px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.5);}
-.popup-content img {max-width:350px; max-height:80vh; border-radius:8px;}
-#closePopup {position:absolute; top:5px; right:10px; font-size:26px; font-weight:bold; cursor:pointer; color:#333;}
-#installPopup {display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#fff; padding:15px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.3); z-index:3000; text-align:center; max-width:300px;}
-#installPopup button {padding:6px 12px; border:none; border-radius:6px; cursor:pointer; margin-top:8px;}
-#installPopup .closeBtn {background:#ccc; margin-top:5px;}
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin:0; padding:20px;
+  display:flex; justify-content:center;
+  background: linear-gradient(to bottom right, #f0f4f8, #d9e2ec);
+}
+.container {
+  width:95%; max-width:720px; background:#fff; padding:25px 30px; border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.12); transition: all 0.3s ease;
+}
+h2 {text-align:center; color:#2c3e50; margin-top:0;}
+.language-select {text-align:right; margin-bottom:15px;}
+details {margin:15px 0; border-radius:12px; padding:12px; background:#f9fafc; box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+details summary {font-weight:600; font-size:16px; cursor:pointer; color:#34495e;}
+.input-row {display:flex; flex-wrap:wrap; gap:12px; margin-top:10px;}
+.input-row input, .input-row select {flex:1; padding:10px 12px; border:1px solid #ccd6dd; border-radius:10px; font-size:14px; transition:0.2s;}
+.input-row input:focus, .input-row select:focus {border-color:#4CAF50; outline:none; box-shadow:0 0 6px rgba(76,175,80,0.3);}
+button {padding:10px 18px; margin-top:12px; cursor:pointer; border:none; border-radius:12px; background:#4CAF50; color:white; font-weight:600; font-size:15px; transition:0.2s;}
+button:hover {background:#45a049;}
+#result {margin-top:20px; padding:20px; border-radius:16px; background:#e8f5e9; border:1px solid #a5d6a7; font-weight:500; line-height:1.6;}
+#saveImageBtn {background:#ff9800; margin-left:10px; display:none;}
+#saveImageBtn:hover { background:#fb8c00; }
+#installPopup {display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#fff; padding:15px 20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:3000; text-align:center;}
+#installPopup button {padding:6px 12px; border:none; border-radius:8px; cursor:pointer; margin-top:8px;}
+#installPopup .closeBtn { background:#ccc; margin-top:5px; }
 </style>
 </head>
 <body>
 
 <div class="container" id="appContent">
-  <h2>📊 แอปคำนวณต้นทุน</h2>
+  <div class="language-select">
+    <select id="langSelect">
+      <option value="th">ไทย</option>
+      <option value="en">English</option>
+    </select>
+  </div>
 
-  <!-- ค่าแรง/คน + ค่าน้ำ/ไฟ -->
+  <h2 id="title">📊 แอปคำนวณต้นทุน Modern</h2>
+
   <details open>
-    <summary>💼 ค่าแรง & ค่าใช้จ่าย</summary>
+    <summary id="labelLabor">💼 ค่าแรง & ค่าใช้จ่าย</summary>
     <div class="input-row">
       <input type="number" id="workers" placeholder="จำนวนคน">
       <input type="number" id="wage" placeholder="ค่าแรงต่อคน">
@@ -64,16 +57,14 @@ button:hover {background:#0056b3;}
     </div>
   </details>
 
-  <!-- วัตถุดิบ -->
   <details>
-    <summary>🥦 วัตถุดิบ</summary>
+    <summary id="labelMaterial">🥦 วัตถุดิบ</summary>
     <div id="materials"></div>
     <button onclick="addMaterial()">+ เพิ่มวัตถุดิบ</button>
   </details>
 
-  <!-- กำไร -->
   <details>
-    <summary>💰 กำไร</summary>
+    <summary id="labelProfit">💰 กำไร</summary>
     <div class="input-row">
       <input type="number" id="profit" placeholder="กำไร %">
       <select id="profitType">
@@ -85,25 +76,13 @@ button:hover {background:#0056b3;}
     </div>
   </details>
 
-  <button onclick="calculate()">คำนวณ</button>
+  <button onclick="calculate()" id="calcBtn">คำนวณ</button>
   <button id="saveImageBtn">บันทึกภาพ</button>
   <div id="result"></div>
 </div>
 
-<!-- Donate -->
-<button id="donateBtn">
-  <img src="https://drive.google.com/uc?export=view&id=1M3FLPg5jJQraRE3weUtRLGMiUro5JJcK" alt="Donate">
-</button>
-<div id="donatePopup">
-  <div class="popup-content">
-    <span id="closePopup">&times;</span>
-    <img src="https://drive.google.com/uc?export=view&id=1M3FLPg5jJQraRE3weUtRLGMiUro5JJcK" alt="Donate QR">
-  </div>
-</div>
-
-<!-- Add to Home -->
 <div id="installPopup">
-  <p>📲 ติดตั้งแอปบนหน้าจอโฮม เพื่อเปิดใช้งานสะดวกเหมือนแอปจริง</p>
+  <p id="installText">📲 ติดตั้งแอปบนหน้าจอโฮม เพื่อเปิดใช้งานสะดวกเหมือนแอปจริง</p>
   <button id="installBtn">เพิ่มไปยังหน้าจอโฮม</button>
   <button class="closeBtn" onclick="document.getElementById('installPopup').style.display='none'">ปิด</button>
 </div>
@@ -111,31 +90,78 @@ button:hover {background:#0056b3;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 let materialCount = 0;
+const texts = {
+  th: {
+    title:"📊 แอปคำนวณต้นทุน Modern",
+    labelLabor:"💼 ค่าแรง & ค่าใช้จ่าย",
+    labelMaterial:"🥦 วัตถุดิบ",
+    labelProfit:"💰 กำไร",
+    workers:"จำนวนคน",
+    wage:"ค่าแรงต่อคน",
+    water:"ค่าน้ำ",
+    electricity:"ค่าไฟ",
+    profit:"กำไร %",
+    duration:"จำนวน (วัน/เดือน/ปี)",
+    calcBtn:"คำนวณ",
+    save:"บันทึกภาพ",
+    install:"📲 ติดตั้งแอปบนหน้าจอโฮม เพื่อเปิดใช้งานสะดวกเหมือนแอปจริง"
+  },
+  en: {
+    title:"📊 Cost Calculator Modern",
+    labelLabor:"💼 Labor & Expenses",
+    labelMaterial:"🥦 Materials",
+    labelProfit:"💰 Profit",
+    workers:"Workers",
+    wage:"Wage per person",
+    water:"Water cost",
+    electricity:"Electricity cost",
+    profit:"Profit %",
+    duration:"Duration (day/month/year)",
+    calcBtn:"Calculate",
+    save:"Save Image",
+    install:"📲 Install this app to Home Screen for quick access"
+  }
+};
 
-// เพิ่มวัตถุดิบ
+// เปลี่ยนภาษา
+document.getElementById("langSelect").addEventListener("change", e=>{
+  const lang=e.target.value;
+  document.getElementById("title").textContent=texts[lang].title;
+  document.getElementById("labelLabor").textContent=texts[lang].labelLabor;
+  document.getElementById("labelMaterial").textContent=texts[lang].labelMaterial;
+  document.getElementById("labelProfit").textContent=texts[lang].labelProfit;
+  document.getElementById("workers").placeholder=texts[lang].workers;
+  document.getElementById("wage").placeholder=texts[lang].wage;
+  document.getElementById("water").placeholder=texts[lang].water;
+  document.getElementById("electricity").placeholder=texts[lang].electricity;
+  document.getElementById("profit").placeholder=texts[lang].profit;
+  document.getElementById("duration").placeholder=texts[lang].duration;
+  document.getElementById("calcBtn").textContent=texts[lang].calcBtn;
+  document.getElementById("saveImageBtn").textContent=texts[lang].save;
+  document.getElementById("installText").textContent=texts[lang].install;
+});
+
+// --- ฟีเจอร์คำนวณ / บันทึกภาพ ---
 function addMaterial(name="", cost=""){
   materialCount++;
   const div = document.createElement("div");
   div.className = "input-row";
   div.id = "material-" + materialCount;
   div.innerHTML = `
-    <input type="text" placeholder="ชื่อวัตถุดิบ" value="${name}">
-    <input type="text" placeholder="ราคา (ใส่หน่วยได้)" value="${cost}">
+    <input type="text" placeholder="Material name" value="${name}">
+    <input type="text" placeholder="Cost (unit)" value="${cost}">
     <button onclick="editMaterial(${materialCount})">⚙️</button>
     <button onclick="deleteMaterial(${materialCount})">❌</button>
   `;
   document.getElementById("materials").appendChild(div);
 }
-
 function deleteMaterial(id){document.getElementById("material-"+id).remove();}
 function editMaterial(id){
-  const div = document.getElementById("material-"+id);
-  const inputs = div.getElementsByTagName("input");
-  inputs[0].disabled = !inputs[0].disabled;
-  inputs[1].disabled = !inputs[1].disabled;
+  const div=document.getElementById("material-"+id);
+  const inputs=div.getElementsByTagName("input");
+  inputs[0].disabled=!inputs[0].disabled;
+  inputs[1].disabled=!inputs[1].disabled;
 }
-
-// คำนวณ
 function calculate(){
   const workers = parseFloat(document.getElementById("workers").value)||0;
   const wage = parseFloat(document.getElementById("wage").value)||0;
@@ -145,30 +171,36 @@ function calculate(){
   const profitType = document.getElementById("profitType").value;
   const duration = parseFloat(document.getElementById("duration").value)||1;
 
-  let materialCost = 0;
+  let materialCost=0;
   document.querySelectorAll("#materials .input-row").forEach(row=>{
     const cost=parseFloat(row.children[1].value)||0;
-    materialCost += cost;
+    materialCost+=cost;
   });
 
-  const laborCost = workers*wage;
-  const otherCost = water+electricity;
-  const totalCost = laborCost + otherCost + materialCost;
+  const laborCost=workers*wage;
+  const otherCost=water+electricity;
+  const totalCost=laborCost+otherCost+materialCost;
 
-  let profitTotal = totalCost*(profit/100);
-  profitTotal *= duration;
+  let profitTotal=totalCost*(profit/100)*duration;
+
+  const lang=document.getElementById("langSelect").value;
+  const txt=(lang==="th")?{
+    labor:"💼 ค่าแรงรวม",other:"💧 ค่าน้ำ + ⚡ ค่าไฟ",material:"🥦 วัตถุดิบ",total:"📊 ต้นทุนรวม",profitText:`💰 กำไร (${profit}% / ${profitType})`
+  }:{
+    labor:"💼 Labor cost",other:"💧 Water + ⚡ Electricity",material:"🥦 Materials",total:"📊 Total cost",profitText:`💰 Profit (${profit}% / ${profitType})`
+  };
 
   document.getElementById("result").innerHTML=`
-    💼 ค่าแรงรวม: ${laborCost} บาท<br>
-    💧 ค่าน้ำ + ⚡ ค่าไฟ: ${otherCost} บาท<br>
-    🥦 วัตถุดิบ: ${materialCost} บาท<br>
-    📊 ต้นทุนรวม: ${totalCost} บาท<br>
-    💰 กำไร (${profit}% / ${profitType}): ${profitTotal} บาท
+    ${txt.labor}: ${laborCost}<br>
+    ${txt.other}: ${otherCost}<br>
+    ${txt.material}: ${materialCost}<br>
+    ${txt.total}: ${totalCost}<br>
+    ${txt.profitText}: ${profitTotal}
   `;
   document.getElementById("saveImageBtn").style.display="inline-block";
 }
 
-// บันทึกภาพ
+// save screenshot
 document.getElementById("saveImageBtn").addEventListener("click", ()=>{
   html2canvas(document.getElementById("appContent")).then(canvas=>{
     const link=document.createElement("a");
@@ -178,30 +210,18 @@ document.getElementById("saveImageBtn").addEventListener("click", ()=>{
   });
 });
 
-// Donate popup
-const donateBtn=document.getElementById("donateBtn");
-const donatePopup=document.getElementById("donatePopup");
-const closePopup=document.getElementById("closePopup");
-donateBtn.addEventListener("click",()=>{donatePopup.style.display="flex";});
-closePopup.addEventListener("click",()=>{donatePopup.style.display="none";});
-donatePopup.addEventListener("click",(e)=>{if(e.target===donatePopup) donatePopup.style.display="none";});
-
 // Add to Home
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt",(e)=>{
-  e.preventDefault();
-  deferredPrompt=e;
+  e.preventDefault(); deferredPrompt=e;
   document.getElementById("installPopup").style.display="block";
 });
 document.getElementById("installBtn").addEventListener("click", async ()=>{
   document.getElementById("installPopup").style.display="none";
-  if(deferredPrompt){
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});
-  }
+  if(deferredPrompt){deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});}
 });
 
-// Service Worker แบบ inline
+// Service Worker inline
 if("serviceWorker" in navigator){
   const swCode=`self.addEventListener("install",e=>{self.skipWaiting();});
   self.addEventListener("activate",e=>{clients.claim();});
@@ -211,8 +231,7 @@ if("serviceWorker" in navigator){
     console.log("SW registered");
     reg.onupdatefound=()=>{const newWorker=reg.installing;
       newWorker.onstatechange=()=>{if(newWorker.state==="installed"&&navigator.serviceWorker.controller){
-        console.log("🔄 update detected, reload");
-        window.location.reload();}};};
+        console.log("🔄 update detected, reload"); window.location.reload();}};};
   });
 }
 </script>
