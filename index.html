@@ -1,217 +1,220 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <title>เว็บคำนวณต้นทุนครบวงจร</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial; max-width: 900px; margin: auto; padding: 20px; background: #f9fafb; }
-    h1, h2 { text-align: center; color: #333; }
-    input, select, button { padding: 8px; margin: 5px; border-radius: 6px; border: 1px solid #ccc; }
-    button { cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    table, th, td { border: 1px solid #ddd; text-align: center; padding: 8px; }
-    th { background: #f0f0f0; }
-    td[contenteditable="true"] { background: #fffbea; }
-    .total { font-size: 1.2em; font-weight: bold; margin-top: 15px; text-align: right; }
-    .delete-btn { background: #dc3545; padding: 4px 8px; border-radius: 4px; border: none; color: white; }
-    .delete-btn:hover { background: #a71d2a; }
-    #clearAll { background: #ff9800; color: white; border: none; padding: 6px 10px; border-radius: 6px; }
-    #clearAll:hover { background: #e68900; }
-    .section { border: 1px solid #ddd; padding: 10px; border-radius: 8px; margin-top: 15px; background: #fff; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แอปคำนวณต้นทุน</title>
+<meta name="theme-color" content="#4CAF50">
 
-    /* ปุ่มโดเนท มุมซ้ายล่าง */
-    #donateBtn {
-      position: fixed;
-      left: 20px;
-      bottom: 20px;
-      z-index: 999;
-      background: none;
-      border: none;
-      cursor: pointer;
-    }
-    #donateBtn img {
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      transition: transform 0.2s;
-    }
-    #donateBtn img:hover {
-      transform: scale(1.1);
-    }
-  </style>
+<!-- PWA manifest แบบ inline -->
+<script type="application/manifest+json" id="manifest">
+{
+  "name": "แอปคำนวณต้นทุน",
+  "short_name": "ต้นทุน",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4CAF50",
+  "icons": [
+    { "src": "https://via.placeholder.com/192", "sizes": "192x192", "type": "image/png" },
+    { "src": "https://via.placeholder.com/512", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+</script>
+
+<style>
+body {font-family:sans-serif; margin:0; padding:20px; display:flex; justify-content:center; background:#f4f4f4;}
+.container {width:95%; max-width:800px; background:#fff; padding:20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+h2 {margin-top:0; text-align:center;}
+details {margin:10px 0; border:1px solid #ccc; border-radius:8px; padding:10px; background:#fafafa;}
+details summary {font-weight:bold; cursor:pointer;}
+.input-row {display:flex; gap:10px; margin-bottom:10px;}
+.input-row input {flex:1; padding:6px;}
+button {padding:8px 16px; margin-top:10px; cursor:pointer; border:none; border-radius:6px; background:#007bff; color:white;}
+button:hover {background:#0056b3;}
+#result {margin-top:20px; padding:15px; border-radius:8px; background:#e9f7ef; border:1px solid #28a745;}
+#saveImageBtn {background:#28a745; margin-left:10px; display:none;}
+#donateBtn {position:fixed; left:20px; bottom:20px; z-index:1000; background:none; border:none; cursor:pointer;}
+#donateBtn img {width:60px; height:60px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.3); transition: transform 0.2s;}
+#donateBtn img:hover {transform: scale(1.1);}
+#donatePopup {display:none; position:fixed; z-index:2000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.7); justify-content:center; align-items:center;}
+.popup-content {position:relative; background:#fff; padding:15px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.5);}
+.popup-content img {max-width:350px; max-height:80vh; border-radius:8px;}
+#closePopup {position:absolute; top:5px; right:10px; font-size:26px; font-weight:bold; cursor:pointer; color:#333;}
+#installPopup {display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#fff; padding:15px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.3); z-index:3000; text-align:center; max-width:300px;}
+#installPopup button {padding:6px 12px; border:none; border-radius:6px; cursor:pointer; margin-top:8px;}
+#installPopup .closeBtn {background:#ccc; margin-top:5px;}
+</style>
 </head>
 <body>
-  <h1>เว็บคำนวณต้นทุนครบวงจร</h1>
+
+<div class="container" id="appContent">
+  <h2>📊 แอปคำนวณต้นทุน</h2>
+
+  <!-- ค่าแรง/คน + ค่าน้ำ/ไฟ -->
+  <details open>
+    <summary>💼 ค่าแรง & ค่าใช้จ่าย</summary>
+    <div class="input-row">
+      <input type="number" id="workers" placeholder="จำนวนคน">
+      <input type="number" id="wage" placeholder="ค่าแรงต่อคน">
+    </div>
+    <div class="input-row">
+      <input type="number" id="water" placeholder="ค่าน้ำ">
+      <input type="number" id="electricity" placeholder="ค่าไฟ">
+    </div>
+  </details>
 
   <!-- วัตถุดิบ -->
-  <div class="section">
-    <h2>วัตถุดิบ</h2>
-    <div>
-      <input id="name" placeholder="ชื่อวัตถุดิบ">
-      <input id="price" type="number" placeholder="ราคา/หน่วย">
-      <input id="qty" type="text" placeholder="จำนวน เช่น 1 ขีด, 500 กรัม">
-      <button onclick="addItem()">เพิ่ม</button>
-      <button id="clearAll" onclick="clearAll()">ลบทั้งหมด</button>
-    </div>
-    <table id="itemTable">
-      <thead>
-        <tr>
-          <th>วัตถุดิบ</th>
-          <th>ราคา/หน่วย</th>
-          <th>จำนวน</th>
-          <th>รวม</th>
-          <th>จัดการ</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <!-- ค่าแรงและจำนวนคน -->
-  <div class="section">
-    <h2>ค่าแรงและจำนวนคน</h2>
-    <div>
-      <input id="labor" type="number" placeholder="ค่าแรงรวม">
-      <input id="people" type="number" placeholder="จำนวนคน">
-    </div>
-  </div>
-
-  <!-- ค่าไฟและค่าน้ำ -->
-  <div class="section">
-    <h2>ค่าไฟและค่าน้ำ</h2>
-    <div>
-      <input id="electric" type="number" placeholder="ค่าไฟ">
-      <input id="water" type="number" placeholder="ค่าน้ำ">
-    </div>
-  </div>
+  <details>
+    <summary>🥦 วัตถุดิบ</summary>
+    <div id="materials"></div>
+    <button onclick="addMaterial()">+ เพิ่มวัตถุดิบ</button>
+  </details>
 
   <!-- กำไร -->
-  <div class="section">
-    <h2>กำไร</h2>
-    <div>
-      <input id="profit" type="number" placeholder="กำไร (%)">
-      <select id="profitUnit">
+  <details>
+    <summary>💰 กำไร</summary>
+    <div class="input-row">
+      <input type="number" id="profit" placeholder="กำไร %">
+      <select id="profitType">
         <option value="day">รายวัน</option>
         <option value="month" selected>รายเดือน</option>
         <option value="year">รายปี</option>
       </select>
-      <input id="months" type="number" placeholder="จำนวนวัน/เดือน/ปี">
+      <input type="number" id="duration" placeholder="จำนวน (วัน/เดือน/ปี)">
     </div>
+  </details>
+
+  <button onclick="calculate()">คำนวณ</button>
+  <button id="saveImageBtn">บันทึกภาพ</button>
+  <div id="result"></div>
+</div>
+
+<!-- Donate -->
+<button id="donateBtn">
+  <img src="https://drive.google.com/uc?export=view&id=1M3FLPg5jJQraRE3weUtRLGMiUro5JJcK" alt="Donate">
+</button>
+<div id="donatePopup">
+  <div class="popup-content">
+    <span id="closePopup">&times;</span>
+    <img src="https://drive.google.com/uc?export=view&id=1M3FLPg5jJQraRE3weUtRLGMiUro5JJcK" alt="Donate QR">
   </div>
+</div>
 
-  <div class="total" id="total">ต้นทุนรวม: 0 บาท</div>
-  <div class="total" id="totalProfit">ราคาขายรวมกำไร: 0 บาท</div>
+<!-- Add to Home -->
+<div id="installPopup">
+  <p>📲 ติดตั้งแอปบนหน้าจอโฮม เพื่อเปิดใช้งานสะดวกเหมือนแอปจริง</p>
+  <button id="installBtn">เพิ่มไปยังหน้าจอโฮม</button>
+  <button class="closeBtn" onclick="document.getElementById('installPopup').style.display='none'">ปิด</button>
+</div>
 
-  <!-- ปุ่มโดเนท -->
-  <button id="donateBtn">
-    <img src="https://drive.google.com/uc?export=view&id=1M3FLPg5jJQraRE3weUtRLGMiUro5JJcK" alt="Donate" />
-  </button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+let materialCount = 0;
 
-  <script>
-    let items = JSON.parse(localStorage.getItem("items") || "[]");
+// เพิ่มวัตถุดิบ
+function addMaterial(name="", cost=""){
+  materialCount++;
+  const div = document.createElement("div");
+  div.className = "input-row";
+  div.id = "material-" + materialCount;
+  div.innerHTML = `
+    <input type="text" placeholder="ชื่อวัตถุดิบ" value="${name}">
+    <input type="text" placeholder="ราคา (ใส่หน่วยได้)" value="${cost}">
+    <button onclick="editMaterial(${materialCount})">⚙️</button>
+    <button onclick="deleteMaterial(${materialCount})">❌</button>
+  `;
+  document.getElementById("materials").appendChild(div);
+}
 
-    function saveItems() {
-      localStorage.setItem("items", JSON.stringify(items));
-      ['labor','people','electric','water','profit','months','profitUnit'].forEach(id=>{
-        localStorage.setItem(id, document.getElementById(id).value);
-      });
-    }
+function deleteMaterial(id){document.getElementById("material-"+id).remove();}
+function editMaterial(id){
+  const div = document.getElementById("material-"+id);
+  const inputs = div.getElementsByTagName("input");
+  inputs[0].disabled = !inputs[0].disabled;
+  inputs[1].disabled = !inputs[1].disabled;
+}
 
-    window.onload = function() {
-      ['labor','people','electric','water','profit','months','profitUnit'].forEach(id=>{
-        document.getElementById(id).value = localStorage.getItem(id) || (id==='months'?'1':'');
-      });
-      renderTable();
-    }
+// คำนวณ
+function calculate(){
+  const workers = parseFloat(document.getElementById("workers").value)||0;
+  const wage = parseFloat(document.getElementById("wage").value)||0;
+  const water = parseFloat(document.getElementById("water").value)||0;
+  const electricity = parseFloat(document.getElementById("electricity").value)||0;
+  const profit = parseFloat(document.getElementById("profit").value)||0;
+  const profitType = document.getElementById("profitType").value;
+  const duration = parseFloat(document.getElementById("duration").value)||1;
 
-    function parseQuantity(qtyStr) {
-      const match = qtyStr.match(/([\d.]+)\s*(\S*)/);
-      return match ? { value: parseFloat(match[1]), unit: match[2] } : { value:0, unit:'' };
-    }
+  let materialCost = 0;
+  document.querySelectorAll("#materials .input-row").forEach(row=>{
+    const cost=parseFloat(row.children[1].value)||0;
+    materialCost += cost;
+  });
 
-    function addItem() {
-      const name = document.getElementById("name").value;
-      const price = parseFloat(document.getElementById("price").value);
-      const qty = document.getElementById("qty").value;
-      if(!name || isNaN(price) || !qty){ alert("กรอกข้อมูลให้ครบ"); return; }
-      items.push({ name, price, qty });
-      saveItems();
-      renderTable();
-      document.getElementById("name").value = "";
-      document.getElementById("price").value = "";
-      document.getElementById("qty").value = "";
-    }
+  const laborCost = workers*wage;
+  const otherCost = water+electricity;
+  const totalCost = laborCost + otherCost + materialCost;
 
-    function deleteItem(index){ items.splice(index,1); saveItems(); renderTable(); }
-    function clearAll(){
-      if(confirm("คุณต้องการลบรายการทั้งหมดใช่หรือไม่?")){ items=[]; saveItems(); renderTable(); }
-    }
+  let profitTotal = totalCost*(profit/100);
+  profitTotal *= duration;
 
-    function renderTable(){
-      const tbody = document.querySelector("#itemTable tbody");
-      tbody.innerHTML = "";
-      let totalRaw = 0;
+  document.getElementById("result").innerHTML=`
+    💼 ค่าแรงรวม: ${laborCost} บาท<br>
+    💧 ค่าน้ำ + ⚡ ค่าไฟ: ${otherCost} บาท<br>
+    🥦 วัตถุดิบ: ${materialCost} บาท<br>
+    📊 ต้นทุนรวม: ${totalCost} บาท<br>
+    💰 กำไร (${profit}% / ${profitType}): ${profitTotal} บาท
+  `;
+  document.getElementById("saveImageBtn").style.display="inline-block";
+}
 
-      items.forEach((item,index)=>{
-        const qtyObj = parseQuantity(item.qty);
-        const subtotal = item.price * qtyObj.value;
-        totalRaw += subtotal;
+// บันทึกภาพ
+document.getElementById("saveImageBtn").addEventListener("click", ()=>{
+  html2canvas(document.getElementById("appContent")).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="calculation.png";
+    link.href=canvas.toDataURL();
+    link.click();
+  });
+});
 
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td contenteditable="true" data-field="name">${item.name}</td>
-          <td contenteditable="true" data-field="price">${item.price}</td>
-          <td contenteditable="true" data-field="qty">${item.qty}</td>
-          <td>${subtotal.toFixed(2)}</td>
-          <td><button class="delete-btn" onclick="deleteItem(${index})">ลบ</button></td>
-        `;
+// Donate popup
+const donateBtn=document.getElementById("donateBtn");
+const donatePopup=document.getElementById("donatePopup");
+const closePopup=document.getElementById("closePopup");
+donateBtn.addEventListener("click",()=>{donatePopup.style.display="flex";});
+closePopup.addEventListener("click",()=>{donatePopup.style.display="none";});
+donatePopup.addEventListener("click",(e)=>{if(e.target===donatePopup) donatePopup.style.display="none";});
 
-        row.querySelectorAll("td[contenteditable]").forEach(td=>{
-          td.addEventListener("blur",()=>{
-            const field = td.getAttribute("data-field");
-            let value = td.textContent;
-            if(field==="price") value = parseFloat(value)||0;
-            items[index][field] = value;
-            saveItems();
-            renderTable();
-          });
-        });
+// Add to Home
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt",(e)=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  document.getElementById("installPopup").style.display="block";
+});
+document.getElementById("installBtn").addEventListener("click", async ()=>{
+  document.getElementById("installPopup").style.display="none";
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});
+  }
+});
 
-        tbody.appendChild(row);
-      });
-
-      const labor = parseFloat(document.getElementById("labor").value)||0;
-      const people = parseFloat(document.getElementById("people").value)||1;
-      const electric = parseFloat(document.getElementById("electric").value)||0;
-      const water = parseFloat(document.getElementById("water").value)||0;
-      const profitPercent = parseFloat(document.getElementById("profit").value)||0;
-      const unit = document.getElementById("profitUnit").value;
-      let periods = parseFloat(document.getElementById("months").value)||1;
-
-      if(unit==='day'){ periods = periods; }
-      else if(unit==='month'){ periods = periods; }
-      else if(unit==='year'){ periods = periods*12; }
-
-      let totalLabor = people>0? labor/people : labor;
-      let totalUtility = electric + water;
-      let totalCost = totalRaw + totalLabor + totalUtility;
-      let totalSale = totalCost * Math.pow(1 + profitPercent/100, periods);
-
-      document.getElementById("total").textContent = "ต้นทุนรวม: " + totalCost.toFixed(2) + " บาท";
-      document.getElementById("totalProfit").textContent = `ราคาขายรวมกำไร (${periods} รอบ): ` + totalSale.toFixed(2) + " บาท";
-    }
-
-    ['labor','people','electric','water','profit','months','profitUnit'].forEach(id=>{
-      document.getElementById(id).addEventListener('input', ()=>{ saveItems(); renderTable(); });
-    });
-
-    // ปุ่มโดเนท
-    document.getElementById("donateBtn").addEventListener("click", ()=>{
-      alert("ขอบคุณที่สนับสนุน!");
-    });
-
-  </script>
+// Service Worker แบบ inline
+if("serviceWorker" in navigator){
+  const swCode=`self.addEventListener("install",e=>{self.skipWaiting();});
+  self.addEventListener("activate",e=>{clients.claim();});
+  self.addEventListener("fetch",e=>{});`;
+  const blob=new Blob([swCode],{type:"application/javascript"});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).then(reg=>{
+    console.log("SW registered");
+    reg.onupdatefound=()=>{const newWorker=reg.installing;
+      newWorker.onstatechange=()=>{if(newWorker.state==="installed"&&navigator.serviceWorker.controller){
+        console.log("🔄 update detected, reload");
+        window.location.reload();}};};
+  });
+}
+</script>
 </body>
 </html>
