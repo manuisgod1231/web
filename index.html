@@ -40,6 +40,7 @@ body.dark .container {
   box-shadow:0 10px 30px rgba(0,0,0,0.5);
   color:#fff;
 }
+body.dark h2 { color:#fff; }
 body.dark input, body.dark select {
   background:#444;
   color:#fff;
@@ -55,9 +56,7 @@ body.dark details {
   box-shadow:0 2px 8px rgba(0,0,0,0.6); 
   color:#fff;
 }
-body.dark details summary {
-  color:#fff; /* <- แก้ตรงนี้ */
-}
+body.dark details summary { color:#fff; }
 body.dark #result {
   background:#333; 
   border:1px solid #555; 
@@ -69,7 +68,6 @@ body.dark #result {
 
 <div class="container" id="appContent">
 
-  <!-- ปุ่มสลับโหมด -->
   <div class="theme-toggle" style="text-align:right; margin-bottom:10px;">
     <button id="themeBtn">🌙 โหมดมืด</button>
   </div>
@@ -81,9 +79,9 @@ body.dark #result {
     </select>
   </div>
 
-  <h2 id="title">📊 แอปคำนวณต้นทุน Modern</h2>
+  <h2 id="title">📊 เว็ป/แอปคำนวณต้นทุน</h2>
 
-  <!-- วัตถุดิบ (อยู่บนสุด) -->
+  <!-- วัตถุดิบ (บนสุด) -->
   <details open>
     <summary id="labelMaterial">🥦 วัตถุดิบ</summary>
     <button id="addMaterialBtn" style="margin-bottom:10px;" onclick="addMaterial()">+ เพิ่มวัตถุดิบ</button>
@@ -123,7 +121,34 @@ body.dark #result {
 
 <script>
 let materialCount = 0;
-const texts = { th:{title:"📊 แอปคำนวณต้นทุน Modern",labelLabor:"💼 ค่าแรง & ค่าใช้จ่าย",labelMaterial:"🥦 วัตถุดิบ",labelProfit:"💰 กำไร",workers:"จำนวนคน",wage:"ค่าแรงต่อคน",water:"ค่าน้ำ",electricity:"ค่าไฟ",profit:"กำไร %",duration:"จำนวน (วัน/เดือน/ปี)",calcBtn:"คำนวณ"}, en:{title:"📊 Cost Calculator Modern",labelLabor:"💼 Labor & Expenses",labelMaterial:"🥦 Materials",labelProfit:"💰 Profit",workers:"Workers",wage:"Wage per person",water:"Water cost",electricity:"Electricity cost",profit:"Profit %",duration:"Duration (day/month/year)",calcBtn:"Calculate"}};
+const texts = {
+  th:{
+    title:"📊 เว็ป/แอปคำนวณต้นทุน",
+    labelLabor:"💼 ค่าแรง & ค่าใช้จ่าย",
+    labelMaterial:"🥦 วัตถุดิบ",
+    labelProfit:"💰 กำไร",
+    workers:"จำนวนคน",
+    wage:"ค่าแรงต่อคน",
+    water:"ค่าน้ำ",
+    electricity:"ค่าไฟ",
+    profit:"กำไร %",
+    duration:"จำนวน (วัน/เดือน/ปี)",
+    calcBtn:"คำนวณ"
+  },
+  en:{
+    title:"📊 Cost Calculator Modern",
+    labelLabor:"💼 Labor & Expenses",
+    labelMaterial:"🥦 Materials",
+    labelProfit:"💰 Profit",
+    workers:"Workers",
+    wage:"Wage per person",
+    water:"Water cost",
+    electricity:"Electricity cost",
+    profit:"Profit %",
+    duration:"Duration (day/month/year)",
+    calcBtn:"Calculate"
+  }
+};
 
 // เปลี่ยนภาษา
 document.getElementById("langSelect").addEventListener("change", e=>{
@@ -156,17 +181,8 @@ function addMaterial(name="", cost=""){
   document.getElementById("materials").appendChild(div);
   checkCanCalculate();
 }
-function deleteMaterial(id){
-  const el=document.getElementById("material-"+id);
-  if(el) el.remove();
-  checkCanCalculate();
-}
-function editMaterial(id){
-  const div=document.getElementById("material-"+id);
-  const inputs=div.getElementsByTagName("input");
-  inputs[0].disabled=!inputs[0].disabled;
-  inputs[1].disabled=!inputs[1].disabled;
-}
+function deleteMaterial(id){ const el=document.getElementById("material-"+id); if(el) el.remove(); checkCanCalculate(); }
+function editMaterial(id){ const div=document.getElementById("material-"+id); const inputs=div.getElementsByTagName("input"); inputs[0].disabled=!inputs[0].disabled; inputs[1].disabled=!inputs[1].disabled; }
 
 // ตรวจสอบปุ่มคำนวณ
 function checkCanCalculate(){
@@ -182,9 +198,6 @@ function checkCanCalculate(){
   document.getElementById("calcBtn").disabled = !(hasMaterial && hasProfit);
 }
 document.getElementById("profit").addEventListener("input", checkCanCalculate);
-["workers","wage","water","electricity"].forEach(id=>{
-  document.getElementById(id).addEventListener("input", checkCanCalculate);
-});
 
 // คำนวณ
 function calculate(){
@@ -242,17 +255,6 @@ themeBtn.addEventListener("click", () => {
   }
 });
 loadTheme();
-
-// Service Worker PWA
-if("serviceWorker" in navigator){
-  const swCode=`self.addEventListener("install",e=>{self.skipWaiting();});
-  self.addEventListener("activate",e=>{clients.claim();});
-  self.addEventListener("fetch",e=>{});`;
-  const blob=new Blob([swCode],{type:"application/javascript"});
-  navigator.serviceWorker.register(URL.createObjectURL(blob)).then(reg=>{
-    console.log("SW registered");
-  });
-}
 </script>
 </body>
 </html>
