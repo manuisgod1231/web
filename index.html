@@ -29,11 +29,6 @@ button {padding:10px 18px; margin-top:12px; cursor:pointer; border:none; border-
 button:hover {background:#45a049;}
 #calcBtn:disabled {background:#888; cursor:not-allowed;}
 #result {margin-top:20px; padding:20px; border-radius:16px; background:#e8f5e9; border:1px solid #a5d6a7; font-weight:500; line-height:1.6;}
-#saveImageBtn {background:#ff9800; margin-left:10px; display:none;}
-#saveImageBtn:hover { background:#fb8c00; }
-#installPopup {display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#fff; padding:15px 20px; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.3); z-index:3000; text-align:center;}
-#installPopup button {padding:6px 12px; border:none; border-radius:8px; cursor:pointer; margin-top:8px;}
-#installPopup .closeBtn { background:#ccc; margin-top:5px; }
 
 /* โหมดมืด */
 body.dark {
@@ -57,7 +52,6 @@ body.dark button {
 body.dark button:hover {background:#777;}
 body.dark details {background:#333; box-shadow:0 2px 8px rgba(0,0,0,0.6); color:#fff;}
 body.dark #result {background:#333; border:1px solid #555; color:#fff;}
-body.dark #saveImageBtn {background:#f57c00; color:#fff;}
 </style>
 </head>
 <body>
@@ -113,20 +107,12 @@ body.dark #saveImageBtn {background:#f57c00; color:#fff;}
   </details>
 
   <button onclick="calculate()" id="calcBtn" disabled>คำนวณ</button>
-  <button id="saveImageBtn">บันทึกภาพ</button>
   <div id="result"></div>
 </div>
 
-<div id="installPopup">
-  <p id="installText">📲 ติดตั้งแอปบนหน้าจอโฮม เพื่อเปิดใช้งานสะดวกเหมือนแอปจริง</p>
-  <button id="installBtn">เพิ่มไปยังหน้าจอโฮม</button>
-  <button class="closeBtn" onclick="document.getElementById('installPopup').style.display='none'">ปิด</button>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 let materialCount = 0;
-const texts = { th:{title:"📊 แอปคำนวณต้นทุน Modern",labelLabor:"💼 ค่าแรง & ค่าใช้จ่าย",labelMaterial:"🥦 วัตถุดิบ",labelProfit:"💰 กำไร",workers:"จำนวนคน",wage:"ค่าแรงต่อคน",water:"ค่าน้ำ",electricity:"ค่าไฟ",profit:"กำไร %",duration:"จำนวน (วัน/เดือน/ปี)",calcBtn:"คำนวณ",save:"บันทึกภาพ",install:"📲 ติดตั้งแอปบนหน้าจอโฮม เพื่อเปิดใช้งานสะดวกเหมือนแอปจริง"}, en:{title:"📊 Cost Calculator Modern",labelLabor:"💼 Labor & Expenses",labelMaterial:"🥦 Materials",labelProfit:"💰 Profit",workers:"Workers",wage:"Wage per person",water:"Water cost",electricity:"Electricity cost",profit:"Profit %",duration:"Duration (day/month/year)",calcBtn:"Calculate",save:"Save Image",install:"📲 Install this app to Home Screen for quick access"}};
+const texts = { th:{title:"📊 แอปคำนวณต้นทุน Modern",labelLabor:"💼 ค่าแรง & ค่าใช้จ่าย",labelMaterial:"🥦 วัตถุดิบ",labelProfit:"💰 กำไร",workers:"จำนวนคน",wage:"ค่าแรงต่อคน",water:"ค่าน้ำ",electricity:"ค่าไฟ",profit:"กำไร %",duration:"จำนวน (วัน/เดือน/ปี)",calcBtn:"คำนวณ"}, en:{title:"📊 Cost Calculator Modern",labelLabor:"💼 Labor & Expenses",labelMaterial:"🥦 Materials",labelProfit:"💰 Profit",workers:"Workers",wage:"Wage per person",water:"Water cost",electricity:"Electricity cost",profit:"Profit %",duration:"Duration (day/month/year)",calcBtn:"Calculate"}};
 
 // เปลี่ยนภาษา
 document.getElementById("langSelect").addEventListener("change", e=>{
@@ -142,8 +128,6 @@ document.getElementById("langSelect").addEventListener("change", e=>{
   document.getElementById("profit").placeholder=texts[lang].profit;
   document.getElementById("duration").placeholder=texts[lang].duration;
   document.getElementById("calcBtn").textContent=texts[lang].calcBtn;
-  document.getElementById("saveImageBtn").textContent=texts[lang].save;
-  document.getElementById("installText").textContent=texts[lang].install;
 });
 
 // ฟังก์ชันวัตถุดิบ
@@ -226,57 +210,29 @@ function calculate(){
     ${txt.total}: ${totalCost}<br>
     ${txt.profitText}: ${profitTotal}
   `;
-  document.getElementById("saveImageBtn").style.display="inline-block";
 }
 
-// บันทึกภาพ
-document.getElementById("saveImageBtn").addEventListener("click", ()=>{
-  const result=document.getElementById("result");
-  const tempDiv=document.createElement("div");
-  tempDiv.style.padding="20px"; tempDiv.style.borderRadius="16px"; tempDiv.style.background="#fff"; tempDiv.style.color=document.body.classList.contains("dark")?"#fff":"#000";
-  tempDiv.style.lineHeight="1.6";
-  tempDiv.innerHTML = result.innerHTML;
-
-  const rows = document.querySelectorAll("#materials .input-row");
-  if(rows.length > 0){
-    let materialText = "<br>🥦 รายละเอียดวัตถุดิบ:<br>";
-    rows.forEach(row=>{
-      const name = row.children[0].value || "(ไม่ระบุชื่อ)";
-      const cost = row.children[1].value || "0";
-      materialText += `${name}: ${cost}<br>`;
-    });
-    tempDiv.innerHTML += materialText;
-  }
-
-  document.body.appendChild(tempDiv);
-  html2canvas(tempDiv).then(canvas=>{
-    const link=document.createElement("a");
-    link.download="calculation.png";
-    link.href=canvas.toDataURL();
-    link.click();
-    document.body.removeChild(tempDiv);
-  });
-});
-
-// โหมดมืด/สว่าง
+// โหมดมืด/สว่าง + จำค่า
 const themeBtn = document.getElementById("themeBtn");
+function loadTheme(){
+  if(localStorage.getItem("theme")==="dark"){
+    document.body.classList.add("dark");
+    themeBtn.textContent="☀️ โหมดสว่าง";
+  }
+}
 themeBtn.addEventListener("click", () => {
   document.body.classList.toggle("dark");
-  themeBtn.textContent = document.body.classList.contains("dark") ? "☀️ โหมดสว่าง" : "🌙 โหมดมืด";
+  if(document.body.classList.contains("dark")){
+    localStorage.setItem("theme","dark");
+    themeBtn.textContent="☀️ โหมดสว่าง";
+  }else{
+    localStorage.setItem("theme","light");
+    themeBtn.textContent="🌙 โหมดมืด";
+  }
 });
+loadTheme();
 
-// Add to Home
-let deferredPrompt;
-window.addEventListener("beforeinstallprompt",(e)=>{
-  e.preventDefault(); deferredPrompt=e;
-  document.getElementById("installPopup").style.display="block";
-});
-document.getElementById("installBtn").addEventListener("click", async ()=>{
-  document.getElementById("installPopup").style.display="none";
-  if(deferredPrompt){deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{deferredPrompt=null;});}
-});
-
-// Service Worker
+// Service Worker PWA
 if("serviceWorker" in navigator){
   const swCode=`self.addEventListener("install",e=>{self.skipWaiting();});
   self.addEventListener("activate",e=>{clients.claim();});
