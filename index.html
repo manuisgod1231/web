@@ -126,38 +126,7 @@ body.dark #saveImageBtn {background:#f57c00; color:#fff;}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 let materialCount = 0;
-const texts = {
-  th: {
-    title:"📊 แอปคำนวณต้นทุน Modern",
-    labelLabor:"💼 ค่าแรง & ค่าใช้จ่าย",
-    labelMaterial:"🥦 วัตถุดิบ",
-    labelProfit:"💰 กำไร",
-    workers:"จำนวนคน",
-    wage:"ค่าแรงต่อคน",
-    water:"ค่าน้ำ",
-    electricity:"ค่าไฟ",
-    profit:"กำไร %",
-    duration:"จำนวน (วัน/เดือน/ปี)",
-    calcBtn:"คำนวณ",
-    save:"บันทึกภาพ",
-    install:"📲 ติดตั้งแอปบนหน้าจอโฮม เพื่อเปิดใช้งานสะดวกเหมือนแอปจริง"
-  },
-  en: {
-    title:"📊 Cost Calculator Modern",
-    labelLabor:"💼 Labor & Expenses",
-    labelMaterial:"🥦 Materials",
-    labelProfit:"💰 Profit",
-    workers:"Workers",
-    wage:"Wage per person",
-    water:"Water cost",
-    electricity:"Electricity cost",
-    profit:"Profit %",
-    duration:"Duration (day/month/year)",
-    calcBtn:"Calculate",
-    save:"Save Image",
-    install:"📲 Install this app to Home Screen for quick access"
-  }
-};
+const texts = { th:{title:"📊 แอปคำนวณต้นทุน Modern",labelLabor:"💼 ค่าแรง & ค่าใช้จ่าย",labelMaterial:"🥦 วัตถุดิบ",labelProfit:"💰 กำไร",workers:"จำนวนคน",wage:"ค่าแรงต่อคน",water:"ค่าน้ำ",electricity:"ค่าไฟ",profit:"กำไร %",duration:"จำนวน (วัน/เดือน/ปี)",calcBtn:"คำนวณ",save:"บันทึกภาพ",install:"📲 ติดตั้งแอปบนหน้าจอโฮม เพื่อเปิดใช้งานสะดวกเหมือนแอปจริง"}, en:{title:"📊 Cost Calculator Modern",labelLabor:"💼 Labor & Expenses",labelMaterial:"🥦 Materials",labelProfit:"💰 Profit",workers:"Workers",wage:"Wage per person",water:"Water cost",electricity:"Electricity cost",profit:"Profit %",duration:"Duration (day/month/year)",calcBtn:"Calculate",save:"Save Image",install:"📲 Install this app to Home Screen for quick access"}};
 
 // เปลี่ยนภาษา
 document.getElementById("langSelect").addEventListener("change", e=>{
@@ -204,7 +173,7 @@ function editMaterial(id){
   inputs[1].disabled=!inputs[1].disabled;
 }
 
-// ตรวจสอบว่ากดคำนวณได้หรือไม่
+// ตรวจสอบปุ่มคำนวณ
 function checkCanCalculate(){
   const rows = document.querySelectorAll("#materials .input-row");
   let hasMaterial=false;
@@ -213,16 +182,11 @@ function checkCanCalculate(){
     const cost=row.children[1].value.trim();
     if(name!=="" && cost!=="") hasMaterial=true;
   });
-
-  const workers=document.getElementById("workers").value.trim();
-  const wage=document.getElementById("wage").value.trim();
-  const water=document.getElementById("water").value.trim();
-  const electricity=document.getElementById("electricity").value.trim();
-  const hasLabor = workers!=="" && wage!=="" && water!=="" && electricity!=="";
-
-  document.getElementById("calcBtn").disabled = !(hasMaterial && hasLabor);
+  const profitValue = document.getElementById("profit").value.trim();
+  const hasProfit = profitValue !== "";
+  document.getElementById("calcBtn").disabled = !(hasMaterial && hasProfit);
 }
-document.getElementById("calcBtn").disabled = true;
+document.getElementById("profit").addEventListener("input", checkCanCalculate);
 ["workers","wage","water","electricity"].forEach(id=>{
   document.getElementById(id).addEventListener("input", checkCanCalculate);
 });
@@ -273,7 +237,6 @@ document.getElementById("saveImageBtn").addEventListener("click", ()=>{
   tempDiv.style.lineHeight="1.6";
   tempDiv.innerHTML = result.innerHTML;
 
-  // เพิ่มรายละเอียดวัตถุดิบ
   const rows = document.querySelectorAll("#materials .input-row");
   if(rows.length > 0){
     let materialText = "<br>🥦 รายละเอียดวัตถุดิบ:<br>";
