@@ -32,6 +32,41 @@ button{padding:10px 18px; margin-top:12px; cursor:pointer; border:none; border-r
 body.dark button{color:#fff;}
 #result{margin-top:20px; padding:20px; border-radius:16px; background:#e8f5e9; border:1px solid #a5d6a7; font-weight:500; line-height:1.6;}
 body.dark #result{background:#3a3a3a; border:1px solid #666; color:#fff;}
+
+/* User panel (มุมขวาล่าง) */
+#userPanel {
+  position: fixed;
+  bottom: 15px;
+  right: 15px;
+  max-width: 300px;
+  padding: 15px;
+  background: rgba(76, 175, 80, 0.9);
+  color: #fff;
+  font-size: 13px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  z-index: 9999;
+  overflow-y: auto;
+  max-height: 50vh;
+  white-space: pre-wrap;
+}
+body.dark #userPanel { background: rgba(50,50,50,0.9); color:#fff; }
+
+/* Version panel (มุมซ้ายล่าง) */
+#versionPanel {
+  position: fixed;
+  bottom: 15px;
+  left: 15px;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 12px;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  z-index: 9999;
+  transition:0.3s;
+}
+body.dark #versionPanel { background: rgba(255,255,255,0.2); color:#fff; }
 </style>
 </head>
 <body>
@@ -76,6 +111,12 @@ body.dark #result{background:#3a3a3a; border:1px solid #666; color:#fff;}
   <div id="result"></div>
 </div>
 
+<!-- User panel -->
+<div id="userPanel"></div>
+
+<!-- Version panel -->
+<div id="versionPanel">v1.0</div>
+
 <script>
 let materialCount=0;
 const texts={
@@ -94,7 +135,8 @@ const texts={
     other:"💧 ค่าน้ำ + ⚡ ค่าไฟ",
     material:"🥦 วัตถุดิบ",
     total:"📊 ต้นทุนรวม",
-    profitText:"💰 กำไร"
+    profitText:"💰 กำไร",
+    calc:"คำนวณ"
   },
   en:{
     title:"📊 Cost Calculator",
@@ -111,7 +153,8 @@ const texts={
     other:"💧 Water + ⚡ Electricity",
     material:"🥦 Materials",
     total:"📊 Total cost",
-    profitText:"💰 Profit"
+    profitText:"💰 Profit",
+    calc:"Calculate"
   }
 };
 
@@ -144,6 +187,7 @@ function deleteMaterial(id){
   const div=document.getElementById("material-"+id); 
   if(div) div.remove(); 
   saveData();
+  updateUserPanel();
 }
 
 function calculate(){
@@ -183,6 +227,7 @@ function calculate(){
   `;
 
   saveData();
+  updateUserPanel();
 }
 
 function switchLang(){
@@ -198,6 +243,7 @@ function switchLang(){
     row.children[1].placeholder=t.matQty;
     row.children[2].placeholder=t.matCost;
   });
+  updateUserPanel();
 }
 
 function toggleDarkMode(){
@@ -217,6 +263,7 @@ function resetAll(){
   document.getElementById("result").innerHTML="";
   materialCount=0;
   localStorage.removeItem("costCalculatorData");
+  updateUserPanel();
 }
 
 function saveData(){
@@ -254,9 +301,46 @@ function loadData(){
   }
 }
 
-window.addEventListener("load", loadData);
-document.addEventListener("input", e=>{if(e.target.closest("#appContent")) saveData();});
-document.addEventListener("change", e=>{if(e.target.closest("#appContent")) saveData();});
+function updateUserPanel() {
+  const workers = document.getElementById("workers").value || 0;
+  const wage = document.getElementById("wage").value || 0;
+  const water = document.getElementById("water").value || 0;
+  const electricity = document.getElementById("electricity").value || 0;
+  const profit = document.getElementById("profit").value || 0;
+
+  let matText = "";
+  document.querySelectorAll("#materials .input-row").forEach((row,i)=>{
+    matText += `${i+1}. ${row.children[0].value || "-"} | ${row.children[1].value || "-"} | ${row.children[2].value || 0} บาท\n`;
+  });
+
+  const lang = document.getElementById("langSelect").value;
+  const t = texts[lang];
+
+  document.getElementById("userPanel").textContent = 
+    `${t.labor}: ${workers} คน x ${wage} บาท\n` +
+    `${t.other}: น้ำ ${water} + ไฟ ${electricity} บาท\n` +
+    `${t.profitText}: ${profit} บาท\n` +
+    `-----\n` +
+    `${t.material}:\n${matText}`;
+}
+
+window.addEventListener("load", ()=>{
+  loadData();
+  updateUserPanel();
+});
+
+document.addEventListener("input", e=>{
+  if(e.target.closest("#appContent")){
+    saveData(); 
+    updateUserPanel();
+  }
+});
+document.addEventListener("change", e=>{
+  if(e.target.closest("#appContent")){
+    saveData();
+    updateUserPanel();
+  }
+});
 
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js")
