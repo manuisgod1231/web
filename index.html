@@ -200,7 +200,7 @@ function calculate(){
   const wage=parseFloat(document.getElementById("wage").value)||0;
   const water=parseFloat(document.getElementById("water").value)||0;
   const electricity=parseFloat(document.getElementById("electricity").value)||0;
-  const profitAmount=parseFloat(document.getElementById("profit").value)||0; // กำไรเป็นบาท
+  const profitAmount=parseFloat(document.getElementById("profit").value)||0; 
   const duration=parseFloat(document.getElementById("duration").value)||1;
   const profitType=document.getElementById("profitType").value;
 
@@ -301,13 +301,19 @@ function resetAll(){
   location.reload();
 }
 
-// --- Users Online Simulation ---
+// --- Users Online Simulation (รีเฟรชทุก 0.1 วิ) ---
 let onlineUsers = parseInt(localStorage.getItem("onlineUsers")) || 1;
 function updateUserPanel(){
   document.getElementById("userPanel").textContent = `👥 = ${onlineUsers}`;
 }
-updateUserPanel();
-window.addEventListener("load",()=>{ onlineUsers++; localStorage.setItem("onlineUsers",onlineUsers); updateUserPanel(); });
+window.addEventListener("load", ()=>{
+  onlineUsers++;
+  localStorage.setItem("onlineUsers", onlineUsers);
+});
+setInterval(()=>{
+  onlineUsers = parseInt(localStorage.getItem("onlineUsers")) || 1;
+  updateUserPanel();
+}, 100);
 
 // --- PWA Service Worker ---
 if("serviceWorker" in navigator){
