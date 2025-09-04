@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>เว็ป/แอปคำนวณต้นทุน</title>
 
-<!-- PWA Manifest & Icon -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" sizes="192x192">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-512.png">
@@ -32,38 +31,9 @@ button{padding:10px 18px; margin-top:12px; cursor:pointer; border:none; border-r
 body.dark button{color:#fff;}
 #result{margin-top:20px; padding:20px; border-radius:16px; background:#e8f5e9; border:1px solid #a5d6a7; font-weight:500; line-height:1.6;}
 body.dark #result{background:#3a3a3a; border:1px solid #666; color:#fff;}
-
-/* User panel (มุมขวาล่าง) */
-#userPanel {
-  position: fixed;
-  bottom: 15px;
-  right: 15px;
-  max-width: 100px;
-  padding: 10px;
-  background: rgba(76, 175, 80, 0.9);
-  color: #fff;
-  font-size: 14px;
-  border-radius: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  z-index: 9999;
-  text-align:center;
-}
+#userPanel {position: fixed; bottom: 15px; right: 15px; max-width: 100px; padding: 10px; background: rgba(76, 175, 80, 0.9); color: #fff; font-size: 14px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 9999; text-align:center;}
 body.dark #userPanel { background: rgba(50,50,50,0.9); color:#fff; }
-
-/* Version panel (มุมซ้ายล่าง) */
-#versionPanel {
-  position: fixed;
-  bottom: 15px;
-  left: 15px;
-  padding: 8px 12px;
-  background: rgba(0,0,0,0.6);
-  color: #fff;
-  font-size: 12px;
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-  z-index: 9999;
-  transition:0.3s;
-}
+#versionPanel {position: fixed; bottom: 15px; left: 15px; padding: 8px 12px; background: rgba(0,0,0,0.6); color: #fff; font-size: 12px; border-radius: 8px; box-shadow: 0 3px 10px rgba(0,0,0,0.3); z-index: 9999; transition:0.3s;}
 body.dark #versionPanel { background: rgba(255,255,255,0.2); color:#fff; }
 </style>
 </head>
@@ -76,7 +46,6 @@ body.dark #versionPanel { background: rgba(255,255,255,0.2); color:#fff; }
     </select>
     <button id="themeBtn" onclick="toggleDarkMode()">🌙</button>
   </div>
-
   <h2 id="title">📊 เว็ป/แอปคำนวณต้นทุน</h2>
 
   <details open>
@@ -115,54 +84,16 @@ body.dark #versionPanel { background: rgba(255,255,255,0.2); color:#fff; }
   <div id="result"></div>
 </div>
 
-<!-- User panel -->
 <div id="userPanel">👥 = 0</div>
-
-<!-- Version panel -->
-<div id="versionPanel">V.Beta 1.0</div>
+<div id="versionPanel">V.Beta 1.0.1</div>
 
 <script>
 let materialCount=0;
 const texts={
-  th:{
-    title:"📊 เว็ป/แอปคำนวณต้นทุน",
-    materials:"🥦 วัตถุดิบ",
-    workers:"จำนวนคน",
-    wage:"ค่าแรง/คน",
-    water:"ค่าน้ำ",
-    electricity:"ค่าไฟ",
-    profit:"กำไร (บาท)",
-    matName:"ชื่อวัตถุดิบ",
-    matQty:"จำนวน (เช่น 2 ขีด)",
-    matCost:"ราคาต่อหน่วย (บาท)",
-    labor:"💼 ค่าแรงรวม",
-    other:"💧 ค่าน้ำ + ⚡ ค่าไฟ",
-    material:"🥦 วัตถุดิบ",
-    total:"📊 ต้นทุนรวม",
-    profitText:"💰 กำไร",
-    calc:"คำนวณ"
-  },
-  en:{
-    title:"📊 Cost Calculator",
-    materials:"🥦 Materials",
-    workers:"Workers",
-    wage:"Wage/person",
-    water:"Water",
-    electricity:"Electricity",
-    profit:"Profit (฿)",
-    matName:"Material name",
-    matQty:"Qty (e.g., 2 units)",
-    matCost:"Cost/unit (฿)",
-    labor:"💼 Labor cost",
-    other:"💧 Water + ⚡ Electricity",
-    material:"🥦 Materials",
-    total:"📊 Total cost",
-    profitText:"💰 Profit",
-    calc:"Calculate"
-  }
+  th:{title:"📊 เว็ป/แอปคำนวณต้นทุน", materials:"🥦 วัตถุดิบ", workers:"จำนวนคน", wage:"ค่าแรง/คน", water:"ค่าน้ำ", electricity:"ค่าไฟ", profit:"กำไร (บาท)", matName:"ชื่อวัตถุดิบ", matQty:"จำนวน (เช่น 2 ขีด)", matCost:"ราคาต่อหน่วย (บาท)", labor:"💼 ค่าแรงรวม", other:"💧 ค่าน้ำ + ⚡ ค่าไฟ", material:"🥦 วัตถุดิบ", total:"📊 ต้นทุนรวม", profitText:"💰 กำไร", calc:"คำนวณ"},
+  en:{title:"📊 Cost Calculator", materials:"🥦 Materials", workers:"Workers", wage:"Wage/person", water:"Water", electricity:"Electricity", profit:"Profit (฿)", matName:"Material name", matQty:"Qty (e.g., 2 units)", matCost:"Cost/unit (฿)", labor:"💼 Labor cost", other:"💧 Water + ⚡ Electricity", material:"🥦 Materials", total:"📊 Total cost", profitText:"💰 Profit", calc:"Calculate"}
 };
 
-// --- Material functions ---
 function addMaterial(name="", qty="", cost=""){
   materialCount++;
   const lang=document.getElementById("langSelect").value;
@@ -194,7 +125,6 @@ function deleteMaterial(id){
   saveData();
 }
 
-// --- Calculation ---
 function calculate(){
   const workers=parseFloat(document.getElementById("workers").value)||0;
   const wage=parseFloat(document.getElementById("wage").value)||0;
@@ -228,7 +158,6 @@ function calculate(){
 
   const lang=document.getElementById("langSelect").value;
   const t=texts[lang];
-
   document.getElementById("result").innerHTML=`
     ${t.labor}: ${laborCost.toLocaleString()} บาท<br>
     ${t.other}: ${otherCost.toLocaleString()} บาท<br>
@@ -239,7 +168,6 @@ function calculate(){
   saveData();
 }
 
-// --- Language ---
 function switchLang(){
   const lang=document.getElementById("langSelect").value;
   const t=texts[lang];
@@ -252,7 +180,6 @@ function switchLang(){
   });
 }
 
-// --- Dark mode ---
 function toggleDarkMode(){
   const body=document.body;
   const btn=document.getElementById("themeBtn");
@@ -260,7 +187,6 @@ function toggleDarkMode(){
   btn.textContent=body.classList.contains("dark")?"☀️":"🌙";
 }
 
-// --- Save/Load LocalStorage ---
 function saveData(){
   const data={
     materials:[],
@@ -295,25 +221,24 @@ function loadData(){
   data.materials.forEach(m=>addMaterial(m.name,m.qty,m.cost));
 }
 
-// --- Reset ---
 function resetAll(){
   localStorage.removeItem("calcData");
   location.reload();
 }
 
-// --- Users Online Simulation (รีเฟรชทุก 0.1 วิ) ---
-let onlineUsers = parseInt(localStorage.getItem("onlineUsers")) || 1;
-function updateUserPanel(){
-  document.getElementById("userPanel").textContent = `👥 = ${onlineUsers}`;
+// --- Users Online Real-Time ---
+const userId = Date.now() + Math.random();
+sessionStorage.setItem("userId", userId);
+
+function heartbeat() {
+  let online = JSON.parse(localStorage.getItem("onlineUsersObj")||"{}");
+  online[userId] = Date.now();
+  const now = Date.now();
+  for(let id in online){ if(now - online[id] > 500) delete online[id]; }
+  localStorage.setItem("onlineUsersObj", JSON.stringify(online));
+  document.getElementById("userPanel").textContent = `👥 = ${Object.keys(online).length}`;
 }
-window.addEventListener("load", ()=>{
-  onlineUsers++;
-  localStorage.setItem("onlineUsers", onlineUsers);
-});
-setInterval(()=>{
-  onlineUsers = parseInt(localStorage.getItem("onlineUsers")) || 1;
-  updateUserPanel();
-}, 100);
+setInterval(heartbeat,100);
 
 // --- PWA Service Worker ---
 if("serviceWorker" in navigator){
