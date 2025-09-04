@@ -8,7 +8,7 @@
 <!-- PWA Manifest & Icon -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" sizes="192x192">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-512.png">
 <meta name="theme-color" content="#4CAF50">
 
 <style>
@@ -76,14 +76,51 @@ body.dark #result{background:#3a3a3a; border:1px solid #666; color:#fff;}
   </details>
 
   <button onclick="calculate()" id="calcBtn">คำนวณ</button>
+  <button onclick="resetAll()">รีเซ็ต</button>
   <div id="result"></div>
 </div>
 
 <script>
 let materialCount=0;
 const texts={
-  th:{title:"📊 เว็ป/แอปคำนวณต้นทุน",materials:"🥦 วัตถุดิบ",workers:"จำนวนคน",wage:"ค่าแรง/คน",water:"ค่าน้ำ",electricity:"ค่าไฟ",profit:"กำไร %",duration:"จำนวน",calc:"คำนวณ",matName:"ชื่อวัตถุดิบ",matQty:"จำนวน",matCost:"ราคาต่อหน่วย",labor:"💼 ค่าแรงรวม",other:"💧 ค่าน้ำ + ⚡ ค่าไฟ",material:"🥦 วัตถุดิบ",total:"📊 ต้นทุนรวม",profitText:"💰 กำไร"},
-  en:{title:"📊 Cost Calculator",materials:"🥦 Materials",workers:"Workers",wage:"Wage/person",water:"Water",electricity:"Electricity",profit:"Profit %",duration:"Amount",calc:"Calculate",matName:"Material name",matQty:"Qty",matCost:"Cost/unit",labor:"💼 Labor cost",other:"💧 Water + ⚡ Electricity",material:"🥦 Materials",total:"📊 Total cost",profitText:"💰 Profit"}
+  th:{
+    title:"📊 เว็ป/แอปคำนวณต้นทุน",
+    materials:"🥦 วัตถุดิบ",
+    workers:"จำนวนคน",
+    wage:"ค่าแรง/คน",
+    water:"ค่าน้ำ",
+    electricity:"ค่าไฟ",
+    profit:"กำไร %",
+    duration:"จำนวน",
+    calc:"คำนวณ",
+    matName:"ชื่อวัตถุดิบ",
+    matQty:"จำนวน (เช่น 2 ขีด)",
+    matCost:"ราคาต่อหน่วย (บาท)",
+    labor:"💼 ค่าแรงรวม",
+    other:"💧 ค่าน้ำ + ⚡ ค่าไฟ",
+    material:"🥦 วัตถุดิบ",
+    total:"📊 ต้นทุนรวม",
+    profitText:"💰 กำไร"
+  },
+  en:{
+    title:"📊 Cost Calculator",
+    materials:"🥦 Materials",
+    workers:"Workers",
+    wage:"Wage/person",
+    water:"Water",
+    electricity:"Electricity",
+    profit:"Profit %",
+    duration:"Amount",
+    calc:"Calculate",
+    matName:"Material name",
+    matQty:"Qty (e.g., 2 units)",
+    matCost:"Cost/unit (฿)",
+    labor:"💼 Labor cost",
+    other:"💧 Water + ⚡ Electricity",
+    material:"🥦 Materials",
+    total:"📊 Total cost",
+    profitText:"💰 Profit"
+  }
 };
 
 function addMaterial(name="", qty="", cost=""){
@@ -92,11 +129,13 @@ function addMaterial(name="", qty="", cost=""){
   const t=texts[lang];
   const div=document.createElement("div");
   div.className="input-row"; div.id="material-"+materialCount;
-  div.innerHTML=`<input type="text" placeholder="${t.matName}" value="${name}" style="flex:2">
-    <input type="number" placeholder="${t.matQty}" value="${qty}" style="flex:1">
+  div.innerHTML=`
+    <input type="text" placeholder="${t.matName}" value="${name}" style="flex:2">
+    <input type="text" placeholder="${t.matQty}" value="${qty}" style="flex:1">
     <input type="number" placeholder="${t.matCost}" value="${cost}" style="flex:1">
     <button onclick="toggleLock(${materialCount})">🔒</button>
-    <button onclick="deleteMaterial(${materialCount})">❌</button>`;
+    <button onclick="deleteMaterial(${materialCount})">❌</button>
+  `;
   document.getElementById("materials").appendChild(div);
 }
 
@@ -109,7 +148,10 @@ function toggleLock(id){
   lockBtn.textContent=locked?"🔒":"🔓";
 }
 
-function deleteMaterial(id){ const div=document.getElementById("material-"+id); if(div) div.remove(); }
+function deleteMaterial(id){ 
+  const div=document.getElementById("material-"+id); 
+  if(div) div.remove(); 
+}
 
 function calculate(){
   const workers=parseFloat(document.getElementById("workers").value)||0;
@@ -120,31 +162,39 @@ function calculate(){
   const duration=parseFloat(document.getElementById("duration").value)||1;
   const profitType=document.getElementById("profitType").value;
   let materialCost=0;
+
   document.querySelectorAll("#materials .input-row").forEach(row=>{
-    const qty=parseFloat(row.children[1].value)||0;
+    const qtyStr=row.children[1].value.trim();
     const cost=parseFloat(row.children[2].value)||0;
-    materialCost+=qty*cost;
+    let qty = parseFloat(qtyStr);
+    if(isNaN(qty)) qty=1; // ถ้าไม่ใช่ตัวเลข เช่น "2 ขีด" ใช้ 1
+    materialCost += qty * cost;
   });
+
   if(profit<=0 || materialCost<=0){
     document.getElementById("result").innerHTML="กรุณากรอก วัตถุดิบ และ กำไรก่อนคำนวณ";
     return;
   }
+
   const laborCost=workers*wage;
   const otherCost=water+electricity;
   const totalCost=laborCost+otherCost+materialCost;
   const profitTotal=totalCost*(profit/100)*duration;
-  let profitLabel="";
-  if(profitType==="day") profitLabel=`💰 กำไร: ${profitTotal} บาท / ${duration} วัน`;
-  if(profitType==="month") profitLabel=`💰 กำไร: ${profitTotal} บาท / ${duration} เดือน`;
-  if(profitType==="year") profitLabel=`💰 กำไร: ${profitTotal} บาท / ${duration} ปี`;
+
   const lang=document.getElementById("langSelect").value;
   const t=texts[lang];
+  let profitLabel="";
+  if(profitType==="day") profitLabel=`${t.profitText}: ${profitTotal.toLocaleString()} ${lang==="th"?"บาท":"฿"} / ${duration} ${lang==="th"?"วัน":"day(s)"}`;
+  if(profitType==="month") profitLabel=`${t.profitText}: ${profitTotal.toLocaleString()} ${lang==="th"?"บาท":"฿"} / ${duration} ${lang==="th"?"เดือน":"month(s)"}`;
+  if(profitType==="year") profitLabel=`${t.profitText}: ${profitTotal.toLocaleString()} ${lang==="th"?"บาท":"฿"} / ${duration} ${lang==="th"?"ปี":"year(s)"}`;
+
   document.getElementById("result").innerHTML=`
-    ${t.labor}: ${laborCost} บาท<br>
-    ${t.other}: ${otherCost} บาท<br>
-    ${t.material}: ${materialCost} บาท<br>
-    ${t.total}: ${totalCost} บาท<br>
-    ${profitLabel}`;
+    ${t.labor}: ${laborCost.toLocaleString()} ${lang==="th"?"บาท":"฿"}<br>
+    ${t.other}: ${otherCost.toLocaleString()} ${lang==="th"?"บาท":"฿"}<br>
+    ${t.material}: ${materialCost.toLocaleString()} ${lang==="th"?"บาท":"฿"}<br>
+    ${t.total}: ${totalCost.toLocaleString()} ${lang==="th"?"บาท":"฿"}<br>
+    ${profitLabel}
+  `;
 }
 
 function switchLang(){
@@ -152,6 +202,9 @@ function switchLang(){
   const t=texts[lang];
   document.getElementById("title").textContent=t.title;
   document.getElementById("labelMaterial").textContent=t.materials;
+  document.getElementById("labelLabor").textContent=t.labor;
+  document.getElementById("labelProfit").textContent=t.profitText;
+  document.getElementById("calcBtn").textContent=t.calc;
   document.querySelectorAll("#materials .input-row").forEach(row=>{
     row.children[0].placeholder=t.matName;
     row.children[1].placeholder=t.matQty;
@@ -164,6 +217,18 @@ function toggleDarkMode(){
   const btn=document.getElementById("themeBtn");
   body.classList.toggle("dark");
   btn.textContent=body.classList.contains("dark")?"☀️":"🌙";
+}
+
+function resetAll(){
+  document.getElementById("materials").innerHTML="";
+  document.getElementById("workers").value="";
+  document.getElementById("wage").value="";
+  document.getElementById("water").value="";
+  document.getElementById("electricity").value="";
+  document.getElementById("profit").value="";
+  document.getElementById("duration").value="";
+  document.getElementById("result").innerHTML="";
+  materialCount=0;
 }
 
 /* --- PWA Service Worker --- */
