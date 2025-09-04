@@ -12,29 +12,47 @@ body {
   display:flex; justify-content:center;
   background: linear-gradient(to bottom right, #f0f4f8, #d9e2ec);
   color:#000;
+  transition: all 0.3s ease;
 }
-body.dark { background:#121212; color:#fff; }
+body.dark {
+  background: linear-gradient(to bottom right, #1e1e1e, #2c2c2c);
+  color:#fff;
+}
 .container {
   width:95%; max-width:720px; background:#fff; padding:25px 30px; border-radius:20px;
   box-shadow:0 10px 30px rgba(0,0,0,0.12); transition: all 0.3s ease;
 }
+body.dark .container {
+  background:#2a2a2a;
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+  color:#fff;
+}
 h2 {text-align:center; color:#2c3e50; margin-top:0;}
+body.dark h2 {color:#fff;}
 .language-select {text-align:right; margin-bottom:15px;}
 details {margin:15px 0; border-radius:12px; padding:12px; background:#f9fafc; box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+body.dark details {background:#333; box-shadow:0 2px 8px rgba(0,0,0,0.5); color:#fff;}
 details summary {font-weight:600; font-size:16px; cursor:pointer; color:#34495e;}
-.input-row {display:flex; flex-wrap:wrap; gap:12px; margin-top:10px;}
-.input-row input, .input-row select {flex:1; padding:10px 12px; border:1px solid #ccd6dd; border-radius:10px; font-size:14px; transition:0.2s;}
-.input-row input:focus, .input-row select:focus {border-color:#4CAF50; outline:none; box-shadow:0 0 6px rgba(76,175,80,0.3);}
+body.dark details summary {color:#fff;}
+.input-row {display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; align-items:center;}
+.input-row input, .input-row select {
+  flex:1; padding:10px 12px; border:1px solid #ccd6dd; border-radius:10px; font-size:14px; transition:0.2s;
+  color:#000; background:#fff;
+}
+body.dark .input-row input, body.dark .input-row select {
+  background:#444; color:#fff; border:1px solid #666;
+}
 button {padding:10px 18px; margin-top:12px; cursor:pointer; border:none; border-radius:12px; background:#4CAF50; color:white; font-weight:600; font-size:15px; transition:0.2s;}
-button:hover {background:#45a049;}
+body.dark button {color:#fff;}
 #result {margin-top:20px; padding:20px; border-radius:16px; background:#e8f5e9; border:1px solid #a5d6a7; font-weight:500; line-height:1.6;}
+body.dark #result {background:#3a3a3a; border:1px solid #666; color:#fff;}
 </style>
 </head>
 <body>
 
 <div class="container" id="appContent">
   <div class="language-select">
-    <select id="langSelect">
+    <select id="langSelect" onchange="switchLang()">
       <option value="th">ไทย</option>
       <option value="en">English</option>
     </select>
@@ -123,18 +141,21 @@ const texts={
 
 function addMaterial(name="", qty="", cost=""){
   materialCount++;
-  const lang=document.getElementById("langSelect").value;
-  const t=texts[lang];
-  const div=document.createElement("div");
-  div.className="input-row";
-  div.id="material-"+materialCount;
-  div.innerHTML=`
-    <input type="text" placeholder="${t.matName}" value="${name}">
-    <input type="number" placeholder="${t.matQty}" value="${qty}">
-    <input type="number" placeholder="${t.matCost}" value="${cost}">
+  const lang = document.getElementById("langSelect").value;
+  const t = texts[lang];
+  
+  const div = document.createElement("div");
+  div.className = "input-row";
+  div.id = "material-" + materialCount;
+  
+  div.innerHTML = `
+    <input type="text" placeholder="${t.matName}" value="${name}" style="flex:2">
+    <input type="number" placeholder="${t.matQty}" value="${qty}" style="flex:1">
+    <input type="number" placeholder="${t.matCost}" value="${cost}" style="flex:1">
     <button onclick="toggleLock(${materialCount})">🔒</button>
     <button onclick="deleteMaterial(${materialCount})">❌</button>
   `;
+  
   document.getElementById("materials").appendChild(div);
 }
 
@@ -147,7 +168,10 @@ function toggleLock(id){
   lockBtn.textContent=locked?"🔒":"🔓";
 }
 
-function deleteMaterial(id){ const div=document.getElementById("material-"+id); if(div) div.remove(); }
+function deleteMaterial(id){ 
+  const div=document.getElementById("material-"+id); 
+  if(div) div.remove(); 
+}
 
 function calculate(){
   const workers=parseFloat(document.getElementById("workers").value)||0;
@@ -165,21 +189,20 @@ function calculate(){
     materialCost+=qty*cost;
   });
 
+  if(profit<=0 || materialCost<=0){
+    document.getElementById("result").innerHTML="กรุณากรอก วัตถุดิบ และ กำไรก่อนคำนวณ";
+    return;
+  }
+
   const laborCost=workers*wage;
   const otherCost=water+electricity;
   const totalCost=laborCost+otherCost+materialCost;
-
-  let profitTotal=0;
-  if(profit>0 && materialCost>0){
-    profitTotal=totalCost*(profit/100)*duration;
-  }
+  const profitTotal=totalCost*(profit/100)*duration;
 
   let profitLabel="";
-  if(profitTotal>0){
-    if(profitType==="day") profitLabel=`💰 กำไร: ${profitTotal} บาท / ${duration} วัน`;
-    if(profitType==="month") profitLabel=`💰 กำไร: ${profitTotal} บาท / ${duration} เดือน`;
-    if(profitType==="year") profitLabel=`💰 กำไร: ${profitTotal} บาท / ${duration} ปี`;
-  }
+  if(profitType==="day") profitLabel=`💰 กำไร: ${profitTotal} บาท / ${duration} วัน`;
+  if(profitType==="month") profitLabel=`💰 กำไร: ${profitTotal} บาท / ${duration} เดือน`;
+  if(profitType==="year") profitLabel=`💰 กำไร: ${profitTotal} บาท / ${duration} ปี`;
 
   const lang=document.getElementById("langSelect").value;
   const t=texts[lang];
@@ -198,12 +221,6 @@ function switchLang(){
   const t=texts[lang];
   document.getElementById("title").textContent=t.title;
   document.getElementById("labelMaterial").textContent=t.materials;
-  document.getElementById("labelWorkers").textContent=t.workers;
-  document.getElementById("labelWage").textContent=t.wage;
-  document.getElementById("labelWater").textContent=t.water;
-  document.getElementById("labelElectricity").textContent=t.electricity;
-  document.getElementById("labelProfit").textContent=t.profit;
-  document.getElementById("labelDuration").textContent=t.duration;
   document.getElementById("calcBtn").textContent=t.calc;
   document.querySelectorAll("#materials .input-row").forEach(row=>{
     row.children[0].placeholder=t.matName;
