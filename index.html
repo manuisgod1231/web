@@ -38,17 +38,15 @@ body.dark #result{background:#3a3a3a; border:1px solid #666; color:#fff;}
   position: fixed;
   bottom: 15px;
   right: 15px;
-  max-width: 300px;
-  padding: 15px;
+  max-width: 100px;
+  padding: 10px;
   background: rgba(76, 175, 80, 0.9);
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   z-index: 9999;
-  overflow-y: auto;
-  max-height: 50vh;
-  white-space: pre-wrap;
+  text-align:center;
 }
 body.dark #userPanel { background: rgba(50,50,50,0.9); color:#fff; }
 
@@ -112,7 +110,7 @@ body.dark #versionPanel { background: rgba(255,255,255,0.2); color:#fff; }
 </div>
 
 <!-- User panel -->
-<div id="userPanel"></div>
+<div id="userPanel">👥 = 0</div>
 
 <!-- Version panel -->
 <div id="versionPanel">v1.0</div>
@@ -187,7 +185,6 @@ function deleteMaterial(id){
   const div=document.getElementById("material-"+id); 
   if(div) div.remove(); 
   saveData();
-  updateUserPanel();
 }
 
 function calculate(){
@@ -227,7 +224,6 @@ function calculate(){
   `;
 
   saveData();
-  updateUserPanel();
 }
 
 function switchLang(){
@@ -243,7 +239,6 @@ function switchLang(){
     row.children[1].placeholder=t.matQty;
     row.children[2].placeholder=t.matCost;
   });
-  updateUserPanel();
 }
 
 function toggleDarkMode(){
@@ -262,8 +257,7 @@ function resetAll(){
   document.getElementById("profit").value="";
   document.getElementById("result").innerHTML="";
   materialCount=0;
-  localStorage.removeItem("costCalculatorData");
-  updateUserPanel();
+  saveData();
 }
 
 function saveData(){
@@ -301,44 +295,26 @@ function loadData(){
   }
 }
 
-function updateUserPanel() {
-  const workers = document.getElementById("workers").value || 0;
-  const wage = document.getElementById("wage").value || 0;
-  const water = document.getElementById("water").value || 0;
-  const electricity = document.getElementById("electricity").value || 0;
-  const profit = document.getElementById("profit").value || 0;
-
-  let matText = "";
-  document.querySelectorAll("#materials .input-row").forEach((row,i)=>{
-    matText += `${i+1}. ${row.children[0].value || "-"} | ${row.children[1].value || "-"} | ${row.children[2].value || 0} บาท\n`;
-  });
-
-  const lang = document.getElementById("langSelect").value;
-  const t = texts[lang];
-
-  document.getElementById("userPanel").textContent = 
-    `${t.labor}: ${workers} คน x ${wage} บาท\n` +
-    `${t.other}: น้ำ ${water} + ไฟ ${electricity} บาท\n` +
-    `${t.profitText}: ${profit} บาท\n` +
-    `-----\n` +
-    `${t.material}:\n${matText}`;
+function updateUserCount(){
+  let count = parseInt(localStorage.getItem("userCount") || "0");
+  count++;
+  localStorage.setItem("userCount", count);
+  document.getElementById("userPanel").textContent = `👥 = ${count}`;
 }
 
 window.addEventListener("load", ()=>{
   loadData();
-  updateUserPanel();
+  updateUserCount();
 });
 
 document.addEventListener("input", e=>{
   if(e.target.closest("#appContent")){
     saveData(); 
-    updateUserPanel();
   }
 });
 document.addEventListener("change", e=>{
   if(e.target.closest("#appContent")){
     saveData();
-    updateUserPanel();
   }
 });
 
