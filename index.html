@@ -12,7 +12,6 @@ body {
   display:flex; justify-content:center;
   background: linear-gradient(to bottom right, #f0f4f8, #d9e2ec);
   color:#000;
-  transition: all 0.3s ease;
 }
 .container {
   width:95%; max-width:720px; background:#fff; padding:25px 30px; border-radius:20px;
@@ -27,13 +26,12 @@ details summary {font-weight:600; font-size:16px; cursor:pointer; color:#34495e;
 .input-row input:focus, .input-row select:focus {border-color:#4CAF50; outline:none; box-shadow:0 0 6px rgba(76,175,80,0.3);}
 button {padding:10px 18px; margin-top:12px; cursor:pointer; border:none; border-radius:12px; background:#4CAF50; color:white; font-weight:600; font-size:15px; transition:0.2s;}
 button:hover {background:#45a049;}
-#calcBtn:disabled {background:#888; cursor:not-allowed;}
 #result {margin-top:20px; padding:20px; border-radius:16px; background:#e8f5e9; border:1px solid #a5d6a7; font-weight:500; line-height:1.6;}
 
 /* โหมดมืด */
 body.dark {
   background: linear-gradient(to bottom right, #1c1c1c, #2c2c2c);
-  color: #fff;
+  color:#fff;
 }
 body.dark .container {
   background:#2c2c2c;
@@ -56,7 +54,7 @@ body.dark details {
   box-shadow:0 2px 8px rgba(0,0,0,0.6); 
   color:#fff;
 }
-body.dark details summary { color:#fff; }
+body.dark details summary {color:#fff;}
 body.dark #result {
   background:#333; 
   border:1px solid #555; 
@@ -67,28 +65,22 @@ body.dark #result {
 <body>
 
 <div class="container" id="appContent">
-
-  <div class="theme-toggle" style="text-align:right; margin-bottom:10px;">
-    <button id="themeBtn">🌙 โหมดมืด</button>
-  </div>
-
   <div class="language-select">
     <select id="langSelect">
       <option value="th">ไทย</option>
       <option value="en">English</option>
     </select>
+    <button onclick="toggleDarkMode()">🌙/☀️</button>
   </div>
 
   <h2 id="title">📊 เว็ป/แอปคำนวณต้นทุน</h2>
 
-  <!-- วัตถุดิบ (บนสุด) -->
   <details open>
     <summary id="labelMaterial">🥦 วัตถุดิบ</summary>
-    <button id="addMaterialBtn" style="margin-bottom:10px;" onclick="addMaterial()">+ เพิ่มวัตถุดิบ</button>
     <div id="materials"></div>
+    <button onclick="addMaterial()">+ เพิ่มวัตถุดิบ</button>
   </details>
 
-  <!-- ค่าแรง & ค่าใช้จ่าย -->
   <details>
     <summary id="labelLabor">💼 ค่าแรง & ค่าใช้จ่าย</summary>
     <div class="input-row">
@@ -101,7 +93,6 @@ body.dark #result {
     </div>
   </details>
 
-  <!-- กำไร -->
   <details>
     <summary id="labelProfit">💰 กำไร</summary>
     <div class="input-row">
@@ -115,89 +106,43 @@ body.dark #result {
     </div>
   </details>
 
-  <button onclick="calculate()" id="calcBtn" disabled>คำนวณ</button>
+  <button onclick="calculate()" id="calcBtn">คำนวณ</button>
   <div id="result"></div>
 </div>
 
 <script>
 let materialCount = 0;
-const texts = {
-  th:{
-    title:"📊 เว็ป/แอปคำนวณต้นทุน",
-    labelLabor:"💼 ค่าแรง & ค่าใช้จ่าย",
-    labelMaterial:"🥦 วัตถุดิบ",
-    labelProfit:"💰 กำไร",
-    workers:"จำนวนคน",
-    wage:"ค่าแรงต่อคน",
-    water:"ค่าน้ำ",
-    electricity:"ค่าไฟ",
-    profit:"กำไร %",
-    duration:"จำนวน (วัน/เดือน/ปี)",
-    calcBtn:"คำนวณ"
-  },
-  en:{
-    title:"📊 Cost Calculator Modern",
-    labelLabor:"💼 Labor & Expenses",
-    labelMaterial:"🥦 Materials",
-    labelProfit:"💰 Profit",
-    workers:"Workers",
-    wage:"Wage per person",
-    water:"Water cost",
-    electricity:"Electricity cost",
-    profit:"Profit %",
-    duration:"Duration (day/month/year)",
-    calcBtn:"Calculate"
-  }
-};
 
-// เปลี่ยนภาษา
-document.getElementById("langSelect").addEventListener("change", e=>{
-  const lang=e.target.value;
-  document.getElementById("title").textContent=texts[lang].title;
-  document.getElementById("labelLabor").textContent=texts[lang].labelLabor;
-  document.getElementById("labelMaterial").textContent=texts[lang].labelMaterial;
-  document.getElementById("labelProfit").textContent=texts[lang].labelProfit;
-  document.getElementById("workers").placeholder=texts[lang].workers;
-  document.getElementById("wage").placeholder=texts[lang].wage;
-  document.getElementById("water").placeholder=texts[lang].water;
-  document.getElementById("electricity").placeholder=texts[lang].electricity;
-  document.getElementById("profit").placeholder=texts[lang].profit;
-  document.getElementById("duration").placeholder=texts[lang].duration;
-  document.getElementById("calcBtn").textContent=texts[lang].calcBtn;
-});
+// toggle โหมดมืด
+function toggleDarkMode(){
+  document.body.classList.toggle("dark");
+}
 
-// ฟังก์ชันวัตถุดิบ
-function addMaterial(name="", cost=""){
+// เพิ่มวัตถุดิบ
+function addMaterial(name="", qty="", cost=""){
   materialCount++;
   const div = document.createElement("div");
   div.className = "input-row";
   div.id = "material-" + materialCount;
   div.innerHTML = `
-    <input type="text" placeholder="Material name" value="${name}" oninput="checkCanCalculate()">
-    <input type="text" placeholder="Cost (unit)" value="${cost}" oninput="checkCanCalculate()">
-    <button onclick="editMaterial(${materialCount})">🔒</button>
-    <button onclick="deleteMaterial(${materialCount}); checkCanCalculate();">❌</button>
+    <input type="text" placeholder="Material name" value="${name}">
+    <input type="number" placeholder="Qty" value="${qty}">
+    <input type="number" placeholder="Cost (unit)" value="${cost}">
+    <button onclick="toggleLock(${materialCount})">🔒</button>
+    <button onclick="deleteMaterial(${materialCount})">❌</button>
   `;
   document.getElementById("materials").appendChild(div);
-  checkCanCalculate();
 }
-function deleteMaterial(id){ const el=document.getElementById("material-"+id); if(el) el.remove(); checkCanCalculate(); }
-function editMaterial(id){ const div=document.getElementById("material-"+id); const inputs=div.getElementsByTagName("input"); inputs[0].disabled=!inputs[0].disabled; inputs[1].disabled=!inputs[1].disabled; }
 
-// ตรวจสอบปุ่มคำนวณ
-function checkCanCalculate(){
-  const rows = document.querySelectorAll("#materials .input-row");
-  let hasMaterial=false;
-  rows.forEach(row=>{
-    const name=row.children[0].value.trim();
-    const cost=row.children[1].value.trim();
-    if(name!=="" && cost!=="") hasMaterial=true;
-  });
-  const profitValue = document.getElementById("profit").value.trim();
-  const hasProfit = profitValue !== "";
-  document.getElementById("calcBtn").disabled = !(hasMaterial && hasProfit);
+function deleteMaterial(id){document.getElementById("material-"+id).remove();}
+function toggleLock(id){
+  const div=document.getElementById("material-"+id);
+  const inputs=div.getElementsByTagName("input");
+  const lockBtn = div.getElementsByTagName("button")[0];
+  const locked = inputs[0].disabled;
+  for (let i=0; i<3; i++){inputs[i].disabled=!locked;}
+  lockBtn.textContent = locked ? "🔒" : "🔓";
 }
-document.getElementById("profit").addEventListener("input", checkCanCalculate);
 
 // คำนวณ
 function calculate(){
@@ -211,50 +156,28 @@ function calculate(){
 
   let materialCost=0;
   document.querySelectorAll("#materials .input-row").forEach(row=>{
-    const cost=parseFloat(row.children[1].value)||0;
-    materialCost+=cost;
+    const qty=parseFloat(row.children[1].value)||0;
+    const cost=parseFloat(row.children[2].value)||0;
+    materialCost += qty * cost;
   });
 
   const laborCost=workers*wage;
   const otherCost=water+electricity;
   const totalCost=laborCost+otherCost+materialCost;
-  const profitTotal=totalCost*(profit/100)*duration;
 
-  const lang=document.getElementById("langSelect").value;
-  const txt=(lang==="th")?{
-    labor:"💼 ค่าแรงรวม",other:"💧 ค่าน้ำ + ⚡ ค่าไฟ",material:"🥦 วัตถุดิบ",total:"📊 ต้นทุนรวม",profitText:`💰 กำไร (${profit}% / ${profitType})`
-  }:{
-    labor:"💼 Labor cost",other:"💧 Water + ⚡ Electricity",material:"🥦 Materials",total:"📊 Total cost",profitText:`💰 Profit (${profit}% / ${profitType})`
-  };
+  let profitTotal="";
+  if (profit>0 && materialCost>0) {
+    profitTotal = totalCost*(profit/100)*duration;
+  }
 
   document.getElementById("result").innerHTML=`
-    ${txt.labor}: ${laborCost}<br>
-    ${txt.other}: ${otherCost}<br>
-    ${txt.material}: ${materialCost}<br>
-    ${txt.total}: ${totalCost}<br>
-    ${txt.profitText}: ${profitTotal}
+    💼 ค่าแรงรวม: ${laborCost}<br>
+    💧 ค่าน้ำ + ⚡ ค่าไฟ: ${otherCost}<br>
+    🥦 วัตถุดิบ: ${materialCost}<br>
+    📊 ต้นทุนรวม: ${totalCost}<br>
+    ${profitTotal!==""?`💰 กำไร (${profit}% / ${profitType}): ${profitTotal}`:""}
   `;
 }
-
-// โหมดมืด/สว่าง + จำค่า
-const themeBtn = document.getElementById("themeBtn");
-function loadTheme(){
-  if(localStorage.getItem("theme")==="dark"){
-    document.body.classList.add("dark");
-    themeBtn.textContent="☀️ โหมดสว่าง";
-  }
-}
-themeBtn.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-  if(document.body.classList.contains("dark")){
-    localStorage.setItem("theme","dark");
-    themeBtn.textContent="☀️ โหมดสว่าง";
-  }else{
-    localStorage.setItem("theme","light");
-    themeBtn.textContent="🌙 โหมดมืด";
-  }
-});
-loadTheme();
 </script>
 </body>
 </html>
