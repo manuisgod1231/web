@@ -67,13 +67,7 @@ body.dark #result{background:#3a3a3a; border:1px solid #666; color:#fff;}
   <details>
     <summary id="labelProfit">💰 กำไร</summary>
     <div class="input-row">
-      <input type="number" id="profit" placeholder="กำไร %">
-      <select id="profitType">
-        <option value="day">วัน</option>
-        <option value="month" selected>เดือน</option>
-        <option value="year">ปี</option>
-      </select>
-      <input type="number" id="duration" placeholder="จำนวน">
+      <input type="number" id="profit" placeholder="กำไร (บาท)">
     </div>
   </details>
 
@@ -92,9 +86,7 @@ const texts={
     wage:"ค่าแรง/คน",
     water:"ค่าน้ำ",
     electricity:"ค่าไฟ",
-    profit:"กำไร %",
-    duration:"จำนวน",
-    calc:"คำนวณ",
+    profit:"กำไร (บาท)",
     matName:"ชื่อวัตถุดิบ",
     matQty:"จำนวน (เช่น 2 ขีด)",
     matCost:"ราคาต่อหน่วย (บาท)",
@@ -111,9 +103,7 @@ const texts={
     wage:"Wage/person",
     water:"Water",
     electricity:"Electricity",
-    profit:"Profit %",
-    duration:"Amount",
-    calc:"Calculate",
+    profit:"Profit (฿)",
     matName:"Material name",
     matQty:"Qty (e.g., 2 units)",
     matCost:"Cost/unit (฿)",
@@ -153,7 +143,7 @@ function toggleLock(id){
 function deleteMaterial(id){ 
   const div=document.getElementById("material-"+id); 
   if(div) div.remove(); 
-  saveData(); // บันทึกทันที
+  saveData();
 }
 
 function calculate(){
@@ -161,43 +151,28 @@ function calculate(){
   const wage=parseFloat(document.getElementById("wage").value)||0;
   const water=parseFloat(document.getElementById("water").value)||0;
   const electricity=parseFloat(document.getElementById("electricity").value)||0;
-  const profit=parseFloat(document.getElementById("profit").value)||0;
-  const duration=parseFloat(document.getElementById("duration").value)||1;
-  const profitType=document.getElementById("profitType").value;
-  let materialCost=0;
+  const profitAmount=parseFloat(document.getElementById("profit").value)||0;
 
+  let materialCost=0;
   document.querySelectorAll("#materials .input-row").forEach(row=>{
     const qtyStr=row.children[1].value.trim();
     const cost=parseFloat(row.children[2].value)||0;
     let qty = parseFloat(qtyStr);
     if(isNaN(qty)){
-      // แปลงจาก "2 ขีด" หรือ "1 กิโล" ถ้ามีเลขนำหน้า
       const m = qtyStr.match(/[\d.]+/);
       qty = m ? parseFloat(m[0]) : 1;
     }
     materialCost += qty * cost;
   });
 
-  if(profit<=0 || materialCost<=0){
-    document.getElementById("result").innerHTML="กรุณากรอก วัตถุดิบ และ กำไรก่อนคำนวณ";
-    return;
-  }
-
   const laborCost=workers*wage;
   const otherCost=water+electricity;
-  const totalCost=laborCost+otherCost+materialCost;
-
-  let profitTotal = 0;
-  if(profitType==="day") profitTotal = totalCost*(profit/100)*(duration/30);
-  if(profitType==="month") profitTotal = totalCost*(profit/100)*duration;
-  if(profitType==="year") profitTotal = totalCost*(profit/100)*duration*12;
+  const totalCost=laborCost+otherCost+materialCost+profitAmount;
 
   const lang=document.getElementById("langSelect").value;
   const t=texts[lang];
-  let profitLabel="";
-  if(profitType==="day") profitLabel=`${t.profitText}: ${profitTotal.toLocaleString()} ${lang==="th"?"บาท":"฿"} / ${duration} ${lang==="th"?"วัน":"day(s)"}`;
-  if(profitType==="month") profitLabel=`${t.profitText}: ${profitTotal.toLocaleString()} ${lang==="th"?"บาท":"฿"} / ${duration} ${lang==="th"?"เดือน":"month(s)"}`;
-  if(profitType==="year") profitLabel=`${t.profitText}: ${profitTotal.toLocaleString()} ${lang==="th"?"บาท":"฿"} / ${duration} ${lang==="th"?"ปี":"year(s)"}`;
+
+  const profitLabel = lang==="th"?`💰 กำไร: ${profitAmount.toLocaleString()} บาท`:`💰 Profit: ${profitAmount.toLocaleString()} ฿`;
 
   document.getElementById("result").innerHTML=`
     ${t.labor}: ${laborCost.toLocaleString()} ${lang==="th"?"บาท":"฿"}<br>
@@ -207,7 +182,7 @@ function calculate(){
     ${profitLabel}
   `;
 
-  saveData(); // บันทึกข้อมูลทุกครั้งหลังคำนวณ
+  saveData();
 }
 
 function switchLang(){
@@ -239,13 +214,11 @@ function resetAll(){
   document.getElementById("water").value="";
   document.getElementById("electricity").value="";
   document.getElementById("profit").value="";
-  document.getElementById("duration").value="";
   document.getElementById("result").innerHTML="";
   materialCount=0;
-  localStorage.removeItem("costCalculatorData"); // ล้าง localStorage
+  localStorage.removeItem("costCalculatorData");
 }
 
-// --- localStorage ---
 function saveData(){
   const data = {
     materials: [],
@@ -253,9 +226,7 @@ function saveData(){
     wage: document.getElementById("wage").value,
     water: document.getElementById("water").value,
     electricity: document.getElementById("electricity").value,
-    profit: document.getElementById("profit").value,
-    profitType: document.getElementById("profitType").value,
-    duration: document.getElementById("duration").value
+    profit: document.getElementById("profit").value
   };
   document.querySelectorAll("#materials .input-row").forEach(row=>{
     data.materials.push({
@@ -276,8 +247,6 @@ function loadData(){
   document.getElementById("water").value = data.water || "";
   document.getElementById("electricity").value = data.electricity || "";
   document.getElementById("profit").value = data.profit || "";
-  document.getElementById("profitType").value = data.profitType || "month";
-  document.getElementById("duration").value = data.duration || 1;
   if(data.materials && data.materials.length>0){
     data.materials.forEach(m=>{
       addMaterial(m.name, m.qty, m.cost);
@@ -285,18 +254,10 @@ function loadData(){
   }
 }
 
-// โหลดข้อมูลเมื่อเปิดหน้าเว็บ
 window.addEventListener("load", loadData);
+document.addEventListener("input", e=>{if(e.target.closest("#appContent")) saveData();});
+document.addEventListener("change", e=>{if(e.target.closest("#appContent")) saveData();});
 
-// บันทึกทุกครั้งที่มี input/change
-document.addEventListener("input", function(e){
-  if(e.target.closest("#appContent")) saveData();
-});
-document.addEventListener("change", function(e){
-  if(e.target.closest("#appContent")) saveData();
-});
-
-/* --- PWA Service Worker --- */
 if("serviceWorker" in navigator){
   navigator.serviceWorker.register("sw.js")
     .then(()=>console.log("Service Worker registered"))
