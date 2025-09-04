@@ -5,10 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>เว็ป/แอปคำนวณต้นทุน</title>
 
-<!-- PWA Manifest & Icon -->
+<!-- PWA Manifest & Icon (Android/Chrome) -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" sizes="192x192">
-<link rel="apple-touch-icon" href="icon-512.png">
+
+<!-- iOS Home Screen -->
+<link rel="apple-touch-icon" sizes="180x180" href="icon-512.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<!-- Theme color for browser -->
 <meta name="theme-color" content="#4CAF50">
 
 <style>
@@ -81,6 +87,7 @@ body.dark #result{background:#3a3a3a; border:1px solid #666; color:#fff;}
 </div>
 
 <script>
+// --- JavaScript Code ---
 let materialCount=0;
 const texts={
   th:{
@@ -179,8 +186,8 @@ function calculate(){
   const laborCost=workers*wage;
   const otherCost=water+electricity;
   const totalCost=laborCost+otherCost+materialCost;
-  const profitTotal=totalCost*(profit/100)*duration;
 
+  const profitTotal=totalCost*(profit/100)*duration;
   const lang=document.getElementById("langSelect").value;
   const t=texts[lang];
   let profitLabel="";
