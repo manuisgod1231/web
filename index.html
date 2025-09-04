@@ -175,7 +175,7 @@ function addMaterial(name="", cost=""){
   div.innerHTML = `
     <input type="text" placeholder="Material name" value="${name}" oninput="checkCanCalculate()">
     <input type="text" placeholder="Cost (unit)" value="${cost}" oninput="checkCanCalculate()">
-    <button onclick="editMaterial(${materialCount})">⚙️</button>
+    <button onclick="editMaterial(${materialCount})">🔒</button>
     <button onclick="deleteMaterial(${materialCount}); checkCanCalculate();">❌</button>
   `;
   document.getElementById("materials").appendChild(div);
