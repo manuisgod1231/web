@@ -5,16 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>เว็ป/แอปคำนวณต้นทุน</title>
 
-<!-- PWA Manifest & Icon (Android/Chrome) -->
+<!-- PWA Manifest & Icon -->
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" sizes="192x192">
-
-<!-- iOS Home Screen -->
 <link rel="apple-touch-icon" sizes="180x180" href="icon-512.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<!-- Theme color for browser -->
 <meta name="theme-color" content="#4CAF50">
 
 <style>
@@ -87,7 +83,6 @@ body.dark #result{background:#3a3a3a; border:1px solid #666; color:#fff;}
 </div>
 
 <script>
-// --- JavaScript Code ---
 let materialCount=0;
 const texts={
   th:{
@@ -158,6 +153,7 @@ function toggleLock(id){
 function deleteMaterial(id){ 
   const div=document.getElementById("material-"+id); 
   if(div) div.remove(); 
+  saveData(); // บันทึกทันที
 }
 
 function calculate(){
@@ -174,7 +170,11 @@ function calculate(){
     const qtyStr=row.children[1].value.trim();
     const cost=parseFloat(row.children[2].value)||0;
     let qty = parseFloat(qtyStr);
-    if(isNaN(qty)) qty=1; // ถ้าไม่ใช่ตัวเลข เช่น "2 ขีด" ใช้ 1
+    if(isNaN(qty)){
+      // แปลงจาก "2 ขีด" หรือ "1 กิโล" ถ้ามีเลขนำหน้า
+      const m = qtyStr.match(/[\d.]+/);
+      qty = m ? parseFloat(m[0]) : 1;
+    }
     materialCost += qty * cost;
   });
 
@@ -187,7 +187,11 @@ function calculate(){
   const otherCost=water+electricity;
   const totalCost=laborCost+otherCost+materialCost;
 
-  const profitTotal=totalCost*(profit/100)*duration;
+  let profitTotal = 0;
+  if(profitType==="day") profitTotal = totalCost*(profit/100)*(duration/30);
+  if(profitType==="month") profitTotal = totalCost*(profit/100)*duration;
+  if(profitType==="year") profitTotal = totalCost*(profit/100)*duration*12;
+
   const lang=document.getElementById("langSelect").value;
   const t=texts[lang];
   let profitLabel="";
@@ -202,6 +206,8 @@ function calculate(){
     ${t.total}: ${totalCost.toLocaleString()} ${lang==="th"?"บาท":"฿"}<br>
     ${profitLabel}
   `;
+
+  saveData(); // บันทึกข้อมูลทุกครั้งหลังคำนวณ
 }
 
 function switchLang(){
@@ -236,7 +242,59 @@ function resetAll(){
   document.getElementById("duration").value="";
   document.getElementById("result").innerHTML="";
   materialCount=0;
+  localStorage.removeItem("costCalculatorData"); // ล้าง localStorage
 }
+
+// --- localStorage ---
+function saveData(){
+  const data = {
+    materials: [],
+    workers: document.getElementById("workers").value,
+    wage: document.getElementById("wage").value,
+    water: document.getElementById("water").value,
+    electricity: document.getElementById("electricity").value,
+    profit: document.getElementById("profit").value,
+    profitType: document.getElementById("profitType").value,
+    duration: document.getElementById("duration").value
+  };
+  document.querySelectorAll("#materials .input-row").forEach(row=>{
+    data.materials.push({
+      name: row.children[0].value,
+      qty: row.children[1].value,
+      cost: row.children[2].value
+    });
+  });
+  localStorage.setItem("costCalculatorData", JSON.stringify(data));
+}
+
+function loadData(){
+  const saved = localStorage.getItem("costCalculatorData");
+  if(!saved) return;
+  const data = JSON.parse(saved);
+  document.getElementById("workers").value = data.workers || "";
+  document.getElementById("wage").value = data.wage || "";
+  document.getElementById("water").value = data.water || "";
+  document.getElementById("electricity").value = data.electricity || "";
+  document.getElementById("profit").value = data.profit || "";
+  document.getElementById("profitType").value = data.profitType || "month";
+  document.getElementById("duration").value = data.duration || 1;
+  if(data.materials && data.materials.length>0){
+    data.materials.forEach(m=>{
+      addMaterial(m.name, m.qty, m.cost);
+    });
+  }
+}
+
+// โหลดข้อมูลเมื่อเปิดหน้าเว็บ
+window.addEventListener("load", loadData);
+
+// บันทึกทุกครั้งที่มี input/change
+document.addEventListener("input", function(e){
+  if(e.target.closest("#appContent")) saveData();
+});
+document.addEventListener("change", function(e){
+  if(e.target.closest("#appContent")) saveData();
+});
 
 /* --- PWA Service Worker --- */
 if("serviceWorker" in navigator){
