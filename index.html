@@ -156,6 +156,7 @@ const texts={
   }
 };
 
+//--- Material functions ---
 function addMaterial(name="", qty="", cost=""){
   materialCount++;
   const lang=document.getElementById("langSelect").value;
@@ -187,6 +188,7 @@ function deleteMaterial(id){
   saveData();
 }
 
+//--- Calculation ---
 function calculate(){
   const workers=parseFloat(document.getElementById("workers").value)||0;
   const wage=parseFloat(document.getElementById("wage").value)||0;
@@ -212,7 +214,6 @@ function calculate(){
 
   const lang=document.getElementById("langSelect").value;
   const t=texts[lang];
-
   const profitLabel = lang==="th"?`💰 กำไร: ${profitAmount.toLocaleString()} บาท`:`💰 Profit: ${profitAmount.toLocaleString()} ฿`;
 
   document.getElementById("result").innerHTML=`
@@ -222,10 +223,10 @@ function calculate(){
     ${t.total}: ${totalCost.toLocaleString()} ${lang==="th"?"บาท":"฿"}<br>
     ${profitLabel}
   `;
-
   saveData();
 }
 
+//--- Language ---
 function switchLang(){
   const lang=document.getElementById("langSelect").value;
   const t=texts[lang];
@@ -241,6 +242,7 @@ function switchLang(){
   });
 }
 
+//--- Dark Mode ---
 function toggleDarkMode(){
   const body=document.body;
   const btn=document.getElementById("themeBtn");
@@ -248,6 +250,7 @@ function toggleDarkMode(){
   btn.textContent=body.classList.contains("dark")?"☀️":"🌙";
 }
 
+//--- Reset ---
 function resetAll(){
   document.getElementById("materials").innerHTML="";
   document.getElementById("workers").value="";
@@ -260,6 +263,7 @@ function resetAll(){
   saveData();
 }
 
+//--- LocalStorage save/load ---
 function saveData(){
   const data = {
     materials: [],
@@ -295,27 +299,45 @@ function loadData(){
   }
 }
 
-function updateUserCount(){
-  let count = parseInt(localStorage.getItem("userCount") || "0");
-  count++;
-  localStorage.setItem("userCount", count);
-  document.getElementById("userPanel").textContent = `👥 = ${count}`;
+//--- Online Users ---
+function updateOnlineUsers(){
+  let online = parseInt(localStorage.getItem("onlineCount")||"0");
+  if(!sessionStorage.getItem("counted")){
+    online++;
+    localStorage.setItem("onlineCount", online);
+    sessionStorage.setItem("counted","true");
+  }
+  document.getElementById("userPanel").textContent = `👥 = ${online}`;
 }
 
+function decreaseOnlineUsers(){
+  if(sessionStorage.getItem("counted")){
+    let online = parseInt(localStorage.getItem("onlineCount")||"0");
+    online = Math.max(online-1,0);
+    localStorage.setItem("onlineCount", online);
+    sessionStorage.removeItem("counted");
+  }
+}
+
+//--- Event Listeners ---
 window.addEventListener("load", ()=>{
   loadData();
-  updateUserCount();
+  updateOnlineUsers();
 });
 
+window.addEventListener("beforeunload", decreaseOnlineUsers);
+
 document.addEventListener("input", e=>{
-  if(e.target.closest("#appContent")){
-    saveData(); 
-  }
+  if(e.target.closest("#appContent")) saveData();
 });
 document.addEventListener("change", e=>{
-  if(e.target.closest("#appContent")){
-    saveData();
-  }
+  if(e.target.closest("#appContent")) saveData();
+});
+
+// Storage event updates user count across tabs
+window.addEventListener("storage", ()=>{
+  const online = parseInt(localStorage.getItem("onlineCount")||"0");
+  document.getElementById("userPanel").textContent = `👥 = ${online}`;
 });
 
 if("serviceWorker" in navigator){
