@@ -229,7 +229,7 @@ function heartbeat() {
   const now = Date.now();
   for(let id in online){ if(now - online[id] > 500) delete online[id]; }
   localStorage.setItem("onlineUsersObj", JSON.stringify(online));
-  document.getElementById("userPanel").textContent = `👥 = ${Object.keys(online).length}`;
+  document.getElementById("userPanel").textContent = `👥🟢 = ${Object.keys(online).length}`;
 }
 setInterval(heartbeat,100);
 
